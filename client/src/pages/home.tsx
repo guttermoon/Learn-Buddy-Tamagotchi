@@ -164,12 +164,15 @@ export default function Home() {
                   showSparkles={Boolean(creature?.happiness && creature.happiness >= 80)}
                   isFeeding={isFeeding}
                   equippedAccessories={equippedAccessories}
+                  hideNameLabel
                 />
 
               {creature && (
-                <div className="mt-4 inline-flex items-baseline gap-2">
-                  <h2 className="font-display text-xl font-bold">{creature.name}</h2>
-                  <RenameDialog currentName={creature.name} />
+                <div className="mt-8 text-center">
+                  <div className="inline-flex items-center gap-1">
+                    <h2 className="font-display text-xl font-bold">{creature.name}</h2>
+                    <RenameDialog currentName={creature.name} />
+                  </div>
                 </div>
               )}
 

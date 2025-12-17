@@ -14,6 +14,7 @@ type CreatureDisplayProps = {
   isFeeding?: boolean;
   equippedAccessories?: EquippedAccessory[];
   onTap?: () => void;
+  hideNameLabel?: boolean;
 };
 
 const stageColors = {
@@ -63,6 +64,7 @@ export function CreatureDisplay({
   isFeeding = false,
   equippedAccessories = [],
   onTap,
+  hideNameLabel = false,
 }: CreatureDisplayProps) {
   const [reactions, setReactions] = useState<{ id: number; x: number; y: number; type: number }[]>([]);
   const [reactionCounter, setReactionCounter] = useState(0);
@@ -263,7 +265,7 @@ export function CreatureDisplay({
         )}
       </motion.div>
 
-      {size === "lg" && creature?.name && (
+      {size === "lg" && creature?.name && !hideNameLabel && (
         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
           <p className="font-display font-semibold text-lg text-foreground">
             {creature.name}
