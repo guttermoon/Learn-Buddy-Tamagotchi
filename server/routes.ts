@@ -158,6 +158,36 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/creature/rename", async (req, res) => {
+    try {
+      const { name } = req.body;
+      
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      
+      if (name.length > 20) {
+        return res.status(400).json({ message: "Name must be 20 characters or less" });
+      }
+      
+      const user = await ensureDemoUser();
+      const creature = await storage.getCreature(user.id);
+      
+      if (!creature) {
+        return res.status(404).json({ message: "Creature not found" });
+      }
+      
+      const updatedCreature = await storage.updateCreature(creature.id, {
+        name: name.trim(),
+      });
+      
+      res.json(updatedCreature);
+    } catch (error) {
+      console.error("Error renaming creature:", error);
+      res.status(500).json({ message: "Failed to rename creature" });
+    }
+  });
+
   app.get("/api/flashcards", async (req, res) => {
     try {
       const user = await ensureDemoUser();

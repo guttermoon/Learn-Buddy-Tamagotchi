@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -10,14 +10,51 @@ import { StreakBadge } from "@/components/streak-badge";
 import { ActionButton } from "@/components/action-button";
 import { DailyFactCard } from "@/components/daily-fact-card";
 import { CreatureLoadingSkeleton } from "@/components/loading-skeleton";
+import { RenameDialog } from "@/components/rename-dialog";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { User, Creature, Accessory, UserAccessory } from "@shared/schema";
 
+type OnboardingState = {
+  hasNamedCreature: boolean;
+  hasCompletedFlashcard: boolean;
+  hasPlayedGame: boolean;
+  hasVisitedShop: boolean;
+  hasViewedProgress: boolean;
+  dismissed: boolean;
+};
+
+const defaultOnboarding: OnboardingState = {
+  hasNamedCreature: false,
+  hasCompletedFlashcard: false,
+  hasPlayedGame: false,
+  hasVisitedShop: false,
+  hasViewedProgress: false,
+  dismissed: false,
+};
+
+function getOnboardingState(): OnboardingState {
+  try {
+    const stored = localStorage.getItem("learnbuddy_onboarding");
+    if (stored) {
+      return { ...defaultOnboarding, ...JSON.parse(stored) };
+    }
+  } catch {}
+  return defaultOnboarding;
+}
+
+function saveOnboardingState(state: OnboardingState) {
+  try {
+    localStorage.setItem("learnbuddy_onboarding", JSON.stringify(state));
+  } catch {}
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isFeeding, setIsFeeding] = useState(false);
+  const [onboarding, setOnboarding] = useState<OnboardingState>(getOnboardingState);
 
   const { data: user, isLoading: userLoading } = useQuery<User>({
     queryKey: ["/api/user"],
@@ -30,6 +67,30 @@ export default function Home() {
   const { data: equippedAccessories = [] } = useQuery<(UserAccessory & { accessory: Accessory })[]>({
     queryKey: ["/api/shop/equipped"],
   });
+
+  useEffect(() => {
+    if (creature && creature.name !== "Buddy") {
+      updateOnboarding({ hasNamedCreature: true });
+    }
+  }, [creature?.name]);
+
+  useEffect(() => {
+    if (user && user.totalFactsMastered > 0) {
+      updateOnboarding({ hasCompletedFlashcard: true });
+    }
+  }, [user?.totalFactsMastered]);
+
+  const updateOnboarding = (updates: Partial<OnboardingState>) => {
+    setOnboarding(prev => {
+      const newState = { ...prev, ...updates };
+      saveOnboardingState(newState);
+      return newState;
+    });
+  };
+
+  const handleDismissOnboarding = () => {
+    updateOnboarding({ dismissed: true });
+  };
 
   const feedMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/creature/feed"),
@@ -105,6 +166,11 @@ export default function Home() {
                   isFeeding={isFeeding}
                   equippedAccessories={equippedAccessories}
                 />
+                {creature && (
+                  <div className="absolute top-0 right-0">
+                    <RenameDialog currentName={creature.name} />
+                  </div>
+                )}
               </div>
 
               <div className="mt-12 flex flex-col items-center gap-3">
@@ -119,6 +185,17 @@ export default function Home() {
             </>
           )}
         </motion.div>
+
+        {!onboarding.dismissed && (
+          <OnboardingChecklist
+            hasNamedCreature={onboarding.hasNamedCreature}
+            hasCompletedFlashcard={onboarding.hasCompletedFlashcard}
+            hasPlayedGame={onboarding.hasPlayedGame}
+            hasVisitedShop={onboarding.hasVisitedShop}
+            hasViewedProgress={onboarding.hasViewedProgress}
+            onDismiss={handleDismissOnboarding}
+          />
+        )}
 
         {creature?.health === "neglected" && (
           <motion.div
@@ -162,7 +239,10 @@ export default function Home() {
               <ActionButton
                 icon={Gamepad2}
                 label="Play"
-                onClick={() => setLocation("/match")}
+                onClick={() => {
+                  updateOnboarding({ hasPlayedGame: true });
+                  setLocation("/match");
+                }}
                 variant="secondary"
                 testId="button-play"
               />
@@ -188,7 +268,10 @@ export default function Home() {
         >
           <Card 
             className="p-4 text-center hover-elevate cursor-pointer"
-            onClick={() => setLocation("/progress")}
+            onClick={() => {
+              updateOnboarding({ hasViewedProgress: true });
+              setLocation("/progress");
+            }}
             data-testid="card-facts-mastered"
           >
             <p className="text-3xl font-display font-bold text-lavender tabular-nums">
@@ -198,7 +281,10 @@ export default function Home() {
           </Card>
           <Card 
             className="p-4 text-center hover-elevate cursor-pointer"
-            onClick={() => setLocation("/shop")}
+            onClick={() => {
+              updateOnboarding({ hasVisitedShop: true });
+              setLocation("/shop");
+            }}
             data-testid="card-coins"
           >
             <div className="flex items-center justify-center gap-1">

@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Crown, Eye, Star, Gem } from "lucide-react";
 import type { Creature, Accessory } from "@shared/schema";
 
@@ -12,6 +13,7 @@ type CreatureDisplayProps = {
   showSparkles?: boolean;
   isFeeding?: boolean;
   equippedAccessories?: EquippedAccessory[];
+  onTap?: () => void;
 };
 
 const stageColors = {
@@ -48,13 +50,50 @@ const healthEmojis = {
   neglected: { expression: "╥﹏╥", eyeType: "crying" },
 };
 
+const moodReactions = [
+  { icon: Heart, color: "text-peach fill-peach" },
+  { icon: Sparkles, color: "text-xp-gold" },
+  { icon: Star, color: "text-lavender fill-lavender" },
+];
+
 export function CreatureDisplay({
   creature,
   size = "lg",
   showSparkles = false,
   isFeeding = false,
   equippedAccessories = [],
+  onTap,
 }: CreatureDisplayProps) {
+  const [reactions, setReactions] = useState<{ id: number; x: number; y: number; type: number }[]>([]);
+  const [reactionCounter, setReactionCounter] = useState(0);
+  
+  const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    let clientX: number, clientY: number;
+    
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const newId = reactionCounter;
+    const type = Math.floor(Math.random() * moodReactions.length);
+    
+    setReactions(prev => [...prev, { id: newId, x, y, type }]);
+    setReactionCounter(prev => prev + 1);
+    
+    setTimeout(() => {
+      setReactions(prev => prev.filter(r => r.id !== newId));
+    }, 1000);
+    
+    onTap?.();
+  }, [reactionCounter, onTap]);
+
   const stage = creature?.stage || 1;
   const health = creature?.health || "happy";
   const colors = stageColors[stage as keyof typeof stageColors] || stageColors[1];
@@ -82,7 +121,30 @@ export function CreatureDisplay({
   };
 
   return (
-    <div className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
+    <div 
+      className={`relative ${sizeClasses[size]} flex items-center justify-center cursor-pointer select-none`}
+      onClick={handleTap}
+      data-testid="creature-display"
+    >
+      <AnimatePresence>
+        {reactions.map(reaction => {
+          const ReactionIcon = moodReactions[reaction.type].icon;
+          return (
+            <motion.div
+              key={reaction.id}
+              className="absolute pointer-events-none z-50"
+              style={{ left: reaction.x, top: reaction.y }}
+              initial={{ opacity: 1, scale: 0.5, y: 0 }}
+              animate={{ opacity: 0, scale: 1.5, y: -40 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <ReactionIcon className={`w-6 h-6 ${moodReactions[reaction.type].color}`} />
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+      
       {showSparkles && (
         <>
           <motion.div
