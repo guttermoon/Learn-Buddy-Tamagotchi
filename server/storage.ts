@@ -1,15 +1,17 @@
 import { 
   users, creatures, facts, flashcards, quizQuestions, quizSessions, achievements, userAchievements,
-  accessories, userAccessories,
+  accessories, userAccessories, teams, teamMembers, teamContributions,
   type User, type InsertUser, type Creature, type InsertCreature, 
   type Fact, type InsertFact, type Flashcard, type InsertFlashcard,
   type QuizQuestion, type InsertQuizQuestion, type QuizSession, type InsertQuizSession,
   type Achievement, type UserAchievement,
   type Accessory, type InsertAccessory, type UserAccessory, type InsertUserAccessory,
+  type Team, type InsertTeam, type TeamMember, type InsertTeamMember,
+  type TeamContribution, type InsertTeamContribution, type TeamLeaderboardEntry,
   type LeaderboardEntry
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, lte, sql } from "drizzle-orm";
+import { eq, desc, asc, lte, sql, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -48,6 +50,20 @@ export interface IStorage {
   getAccessory(id: string): Promise<Accessory | undefined>;
   unequipAccessoriesByCategory(userId: string, category: string): Promise<void>;
   getEquippedAccessories(userId: string): Promise<(UserAccessory & { accessory: Accessory })[]>;
+  
+  // Team methods
+  createTeam(team: InsertTeam): Promise<Team>;
+  getTeam(id: string): Promise<Team | undefined>;
+  getTeamByCode(code: string): Promise<Team | undefined>;
+  updateTeam(id: string, data: Partial<Team>): Promise<Team | undefined>;
+  getUserTeams(userId: string): Promise<Team[]>;
+  addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  removeTeamMember(teamId: string, userId: string): Promise<void>;
+  getTeamMembers(teamId: string): Promise<(TeamMember & { user: User })[]>;
+  isTeamMember(teamId: string, userId: string): Promise<boolean>;
+  addTeamContribution(contribution: InsertTeamContribution): Promise<TeamContribution>;
+  getTeamContributions(teamId: string): Promise<TeamLeaderboardEntry[]>;
+  getUserTeamContribution(teamId: string, userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -239,6 +255,103 @@ export class DatabaseStorage implements IStorage {
   async getEquippedAccessories(userId: string): Promise<(UserAccessory & { accessory: Accessory })[]> {
     const userAccs = await this.getUserAccessories(userId);
     return userAccs.filter(ua => ua.equipped);
+  }
+
+  // Team methods
+  async createTeam(team: InsertTeam): Promise<Team> {
+    const [newTeam] = await db.insert(teams).values(team).returning();
+    return newTeam;
+  }
+
+  async getTeam(id: string): Promise<Team | undefined> {
+    const [team] = await db.select().from(teams).where(eq(teams.id, id));
+    return team || undefined;
+  }
+
+  async getTeamByCode(code: string): Promise<Team | undefined> {
+    const [team] = await db.select().from(teams).where(eq(teams.code, code));
+    return team || undefined;
+  }
+
+  async updateTeam(id: string, data: Partial<Team>): Promise<Team | undefined> {
+    const [team] = await db.update(teams).set(data).where(eq(teams.id, id)).returning();
+    return team || undefined;
+  }
+
+  async getUserTeams(userId: string): Promise<Team[]> {
+    const result = await db
+      .select({ team: teams })
+      .from(teamMembers)
+      .innerJoin(teams, eq(teamMembers.teamId, teams.id))
+      .where(eq(teamMembers.userId, userId));
+    return result.map(r => r.team);
+  }
+
+  async addTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+    const [tm] = await db.insert(teamMembers).values(member).returning();
+    return tm;
+  }
+
+  async removeTeamMember(teamId: string, userId: string): Promise<void> {
+    await db.delete(teamMembers)
+      .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)));
+  }
+
+  async getTeamMembers(teamId: string): Promise<(TeamMember & { user: User })[]> {
+    const result = await db
+      .select()
+      .from(teamMembers)
+      .innerJoin(users, eq(teamMembers.userId, users.id))
+      .where(eq(teamMembers.teamId, teamId));
+    return result.map(r => ({
+      ...r.team_members,
+      user: r.users,
+    }));
+  }
+
+  async isTeamMember(teamId: string, userId: string): Promise<boolean> {
+    const [member] = await db.select()
+      .from(teamMembers)
+      .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)));
+    return !!member;
+  }
+
+  async addTeamContribution(contribution: InsertTeamContribution): Promise<TeamContribution> {
+    const [tc] = await db.insert(teamContributions).values(contribution).returning();
+    return tc;
+  }
+
+  async getTeamContributions(teamId: string): Promise<TeamLeaderboardEntry[]> {
+    const result = await db
+      .select({
+        userId: teamContributions.userId,
+        username: users.username,
+        displayName: users.displayName,
+        totalContributed: sql<number>`SUM(${teamContributions.xpContributed})::int`,
+      })
+      .from(teamContributions)
+      .innerJoin(users, eq(teamContributions.userId, users.id))
+      .where(eq(teamContributions.teamId, teamId))
+      .groupBy(teamContributions.userId, users.username, users.displayName)
+      .orderBy(desc(sql`SUM(${teamContributions.xpContributed})`));
+
+    return result.map((entry, index) => ({
+      rank: index + 1,
+      userId: entry.userId,
+      username: entry.username || "Anonymous",
+      displayName: entry.displayName,
+      totalContributed: entry.totalContributed || 0,
+    }));
+  }
+
+  async getUserTeamContribution(teamId: string, userId: string): Promise<number> {
+    const [result] = await db
+      .select({
+        total: sql<number>`COALESCE(SUM(${teamContributions.xpContributed}), 0)::int`,
+      })
+      .from(teamContributions)
+      .where(and(eq(teamContributions.teamId, teamId), eq(teamContributions.userId, userId)));
+    return result?.total || 0;
   }
 }
 

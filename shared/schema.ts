@@ -101,6 +101,36 @@ export const userAccessories = pgTable("user_accessories", {
   purchasedAt: timestamp("purchased_at").defaultNow(),
 });
 
+// Teams for shared creature
+export const teams = pgTable("teams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(), // Join code for team
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  creatureName: text("creature_name").notNull().default("Team Buddy"),
+  creatureStage: integer("creature_stage").notNull().default(1),
+  totalXp: integer("total_xp").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Team members
+export const teamMembers = pgTable("team_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamId: varchar("team_id").notNull().references(() => teams.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: text("role").notNull().default("member"), // creator, admin, member
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Team contributions (tracks XP contributions to team creature)
+export const teamContributions = pgTable("team_contributions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamId: varchar("team_id").notNull().references(() => teams.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  xpContributed: integer("xp_contributed").notNull().default(0),
+  contributedAt: timestamp("contributed_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   creature: one(creatures, {
@@ -173,6 +203,25 @@ export const insertUserAccessorySchema = createInsertSchema(userAccessories).pic
   accessoryId: true,
 });
 
+export const insertTeamSchema = createInsertSchema(teams).pick({
+  name: true,
+  code: true,
+  creatorId: true,
+  creatureName: true,
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).pick({
+  teamId: true,
+  userId: true,
+  role: true,
+});
+
+export const insertTeamContributionSchema = createInsertSchema(teamContributions).pick({
+  teamId: true,
+  userId: true,
+  xpContributed: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCreature = z.infer<typeof insertCreatureSchema>;
@@ -191,6 +240,21 @@ export type Accessory = typeof accessories.$inferSelect;
 export type InsertAccessory = z.infer<typeof insertAccessorySchema>;
 export type UserAccessory = typeof userAccessories.$inferSelect;
 export type InsertUserAccessory = z.infer<typeof insertUserAccessorySchema>;
+export type Team = typeof teams.$inferSelect;
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamContribution = typeof teamContributions.$inferSelect;
+export type InsertTeamContribution = z.infer<typeof insertTeamContributionSchema>;
+
+// Team leaderboard entry
+export type TeamLeaderboardEntry = {
+  rank: number;
+  userId: string;
+  username: string;
+  displayName: string | null;
+  totalContributed: number;
+};
 
 // Leaderboard entry type
 export type LeaderboardEntry = {
