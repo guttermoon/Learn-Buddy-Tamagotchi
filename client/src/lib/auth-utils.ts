@@ -1,17 +1,30 @@
+import { queryClient } from "@/lib/queryClient";
+
 export function isUnauthorizedError(error: Error): boolean {
   return /^401: .*Unauthorized/.test(error.message);
 }
 
-// Redirect to login with a toast notification
+export async function logout() {
+  try {
+    await fetch("/api/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+}
+
 export function redirectToLogin(toast?: (options: { title: string; description: string; variant: string }) => void) {
   if (toast) {
     toast({
-      title: "Unauthorized",
-      description: "You are logged out. Logging in again...",
+      title: "Session Expired",
+      description: "Please log in again",
       variant: "destructive",
     });
   }
-  setTimeout(() => {
-    window.location.href = "/api/login";
-  }, 500);
+  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
 }

@@ -13,12 +13,12 @@ export async function registerRoutes(
   registerAuthRoutes(app);
   
   async function getCurrentUser(req: any) {
-    // If authenticated via Replit Auth, use that user
-    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
-      const userId = req.user.claims.sub;
+    // If authenticated, use that user
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.id) {
+      const userId = req.user.id;
       let user = await storage.getUser(userId);
       
-      // User should exist from auth upsert, but ensure creature exists
+      // Ensure creature exists for user
       if (user) {
         let creature = await storage.getCreature(user.id);
         if (!creature) {

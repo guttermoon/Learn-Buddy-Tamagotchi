@@ -9,6 +9,7 @@ import { CreatureDisplay } from "@/components/creature-display";
 import { XpBar } from "@/components/xp-bar";
 import { StreakBadge } from "@/components/streak-badge";
 import { PageLoadingSkeleton } from "@/components/loading-skeleton";
+import { logout } from "@/lib/auth-utils";
 import type { User, Creature } from "@shared/schema";
 
 export default function Profile() {
@@ -163,7 +164,7 @@ export default function Profile() {
           <Button
             variant="outline"
             className="w-full text-muted-foreground"
-            onClick={() => window.location.href = "/api/logout"}
+            onClick={() => logout()}
             data-testid="button-logout"
           >
             <LogOut className="w-4 h-4 mr-2" />
