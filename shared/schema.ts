@@ -131,6 +131,31 @@ export const teamContributions = pgTable("team_contributions", {
   contributedAt: timestamp("contributed_at").defaultNow(),
 });
 
+// Accessory gifts (one-way transfers between users)
+export const accessoryGifts = pgTable("accessory_gifts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderUserId: varchar("sender_user_id").notNull().references(() => users.id),
+  recipientUserId: varchar("recipient_user_id").notNull().references(() => users.id),
+  userAccessoryId: varchar("user_accessory_id").notNull().references(() => userAccessories.id),
+  status: text("status").notNull().default("pending"), // pending, accepted, declined, cancelled
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+// Accessory trades (bilateral exchanges between users)
+export const accessoryTrades = pgTable("accessory_trades", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  proposerUserId: varchar("proposer_user_id").notNull().references(() => users.id),
+  recipientUserId: varchar("recipient_user_id").notNull().references(() => users.id),
+  proposerAccessoryId: varchar("proposer_accessory_id").notNull().references(() => userAccessories.id),
+  recipientAccessoryId: varchar("recipient_accessory_id").notNull().references(() => userAccessories.id),
+  status: text("status").notNull().default("pending"), // pending, accepted, declined, cancelled
+  proposerNote: text("proposer_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   creature: one(creatures, {
@@ -222,6 +247,21 @@ export const insertTeamContributionSchema = createInsertSchema(teamContributions
   xpContributed: true,
 });
 
+export const insertAccessoryGiftSchema = createInsertSchema(accessoryGifts).pick({
+  senderUserId: true,
+  recipientUserId: true,
+  userAccessoryId: true,
+  message: true,
+});
+
+export const insertAccessoryTradeSchema = createInsertSchema(accessoryTrades).pick({
+  proposerUserId: true,
+  recipientUserId: true,
+  proposerAccessoryId: true,
+  recipientAccessoryId: true,
+  proposerNote: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCreature = z.infer<typeof insertCreatureSchema>;
@@ -246,6 +286,10 @@ export type TeamMember = typeof teamMembers.$inferSelect;
 export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type TeamContribution = typeof teamContributions.$inferSelect;
 export type InsertTeamContribution = z.infer<typeof insertTeamContributionSchema>;
+export type AccessoryGift = typeof accessoryGifts.$inferSelect;
+export type InsertAccessoryGift = z.infer<typeof insertAccessoryGiftSchema>;
+export type AccessoryTrade = typeof accessoryTrades.$inferSelect;
+export type InsertAccessoryTrade = z.infer<typeof insertAccessoryTradeSchema>;
 
 // Team leaderboard entry
 export type TeamLeaderboardEntry = {
