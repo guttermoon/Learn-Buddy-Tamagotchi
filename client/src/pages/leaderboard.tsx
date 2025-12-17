@@ -64,46 +64,54 @@ export default function Leaderboard() {
                 className="space-y-6"
               >
                 {topThree.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3 mb-8">
-                    {[1, 0, 2].map((displayIndex) => {
-                      const entry = topThree[displayIndex];
-                      if (!entry) return <div key={displayIndex} />;
-                      
-                      const isFirst = displayIndex === 0;
-                      return (
+                  <Card className="p-4 mb-6">
+                    <div className="space-y-3">
+                      {topThree.map((entry, idx) => (
                         <motion.div
                           key={entry.userId}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: displayIndex * 0.1 }}
-                          className={`flex flex-col items-center ${isFirst ? "order-2" : displayIndex === 1 ? "order-1" : "order-3"}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className={`flex items-center gap-3 p-3 rounded-xl ${
+                            entry.rank === 1
+                              ? "bg-xp-gold/10 ring-1 ring-xp-gold/30"
+                              : entry.rank === 2
+                              ? "bg-slate-400/10 ring-1 ring-slate-400/30"
+                              : "bg-amber-600/10 ring-1 ring-amber-600/30"
+                          }`}
                         >
                           <div
-                            className={`relative w-16 h-16 rounded-full flex items-center justify-center mb-2 ${
+                            className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                               entry.rank === 1
-                                ? "bg-xp-gold ring-4 ring-xp-gold/30"
+                                ? "bg-xp-gold"
                                 : entry.rank === 2
-                                ? "bg-slate-400 ring-4 ring-slate-400/30"
-                                : "bg-amber-600 ring-4 ring-amber-600/30"
-                            } ${isFirst ? "w-20 h-20" : ""}`}
+                                ? "bg-slate-400"
+                                : "bg-amber-600"
+                            }`}
                           >
-                            <Trophy className={`text-white ${isFirst ? "w-10 h-10" : "w-6 h-6"}`} />
-                            <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                              entry.rank === 1 ? "bg-xp-gold" : entry.rank === 2 ? "bg-slate-400" : "bg-amber-600"
-                            }`}>
-                              {entry.rank}
-                            </div>
+                            <Trophy className="w-6 h-6 text-white" />
                           </div>
-                          <p className="font-display font-semibold text-sm truncate max-w-full">
-                            {entry.displayName || entry.username}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {entry.xp.toLocaleString()} XP
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display font-semibold truncate">
+                              {entry.displayName || entry.username}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {entry.xp.toLocaleString()} XP
+                            </p>
+                          </div>
+                          <div className={`text-2xl font-display font-bold ${
+                            entry.rank === 1
+                              ? "text-xp-gold"
+                              : entry.rank === 2
+                              ? "text-slate-400"
+                              : "text-amber-600"
+                          }`}>
+                            #{entry.rank}
+                          </div>
                         </motion.div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  </Card>
                 )}
 
                 <Card className="divide-y">

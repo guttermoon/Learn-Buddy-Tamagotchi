@@ -36,10 +36,11 @@ const stages = [
 
 export function EvolutionTimeline({ currentStage, totalFactsMastered }: EvolutionTimelineProps) {
   return (
-    <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto pb-2 px-1">
+    <div className="space-y-3">
       {stages.map((stage, index) => {
         const isUnlocked = currentStage >= stage.stage;
         const isCurrent = currentStage === stage.stage;
+        const nextStage = stages[index + 1];
         const progress = isUnlocked 
           ? 100 
           : index > 0 
@@ -47,55 +48,61 @@ export function EvolutionTimeline({ currentStage, totalFactsMastered }: Evolutio
             : 0;
 
         return (
-          <div key={stage.stage} className="flex items-center flex-1">
-            <motion.div
-              className={`relative flex flex-col items-center p-1.5 sm:p-2 rounded-xl min-w-[50px] sm:min-w-[60px] ${
-                isCurrent 
-                  ? stage.currentBg 
-                  : isUnlocked 
-                    ? stage.unlockedBg 
-                    : "bg-muted"
-              }`}
-              whileHover={{ scale: 1.02 }}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
-                isCurrent 
-                  ? stage.circleCurrent 
-                  : isUnlocked 
-                    ? stage.circleUnlocked 
-                    : "bg-muted-foreground/20 text-muted-foreground"
-              }`}>
-                {isUnlocked ? (
-                  isCurrent ? (
-                    <span className="font-display font-bold text-sm">{stage.stage}</span>
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )
+          <motion.div
+            key={stage.stage}
+            className={`flex items-center gap-3 p-3 rounded-xl ${
+              isCurrent 
+                ? stage.currentBg 
+                : isUnlocked 
+                  ? stage.unlockedBg 
+                  : "bg-muted/50"
+            }`}
+            whileHover={{ scale: 1.01 }}
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              isCurrent 
+                ? stage.circleCurrent 
+                : isUnlocked 
+                  ? stage.circleUnlocked 
+                  : "bg-muted-foreground/20 text-muted-foreground"
+            }`}>
+              {isUnlocked ? (
+                isCurrent ? (
+                  <span className="font-display font-bold">{stage.stage}</span>
                 ) : (
-                  <Lock className="w-3 h-3" />
-                )}
+                  <Check className="w-5 h-5" />
+                )
+              ) : (
+                <Lock className="w-4 h-4" />
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`font-display font-semibold text-sm ${
+                  isUnlocked ? "text-foreground" : "text-muted-foreground"
+                }`}>
+                  {stage.name}
+                </span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {stage.factsRequired}+ facts
+                </span>
               </div>
-              <span className={`font-display font-semibold text-xs ${
-                isUnlocked ? "text-foreground" : "text-muted-foreground"
-              }`}>
-                {stage.name}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {stage.factsRequired}+
-              </span>
-            </motion.div>
-
-            {index < stages.length - 1 && (
-              <div className="flex-1 h-1 mx-1 sm:mx-2 bg-muted rounded-full overflow-hidden min-w-[12px] sm:min-w-[20px]">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-lavender to-mint"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${isUnlocked ? 100 : Math.max(0, progress)}%` }}
-                  transition={{ duration: 0.5 }}
-                />
-              </div>
-            )}
-          </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {stage.description}
+              </p>
+              {!isUnlocked && index > 0 && (
+                <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-lavender to-mint"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.max(0, progress)}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
         );
       })}
     </div>
