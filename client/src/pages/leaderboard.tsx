@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Users, Globe } from "lucide-react";
+import { ArrowLeft, Trophy, Users, Globe, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,9 +48,9 @@ export default function Leaderboard() {
               <Globe className="w-4 h-4 mr-2" />
               Global
             </TabsTrigger>
-            <TabsTrigger value="store" className="flex-1" data-testid="tab-store">
+            <TabsTrigger value="team" className="flex-1" data-testid="tab-team">
               <Users className="w-4 h-4 mr-2" />
-              Store
+              Team
             </TabsTrigger>
           </TabsList>
 
@@ -141,13 +141,17 @@ export default function Leaderboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="store">
+          <TabsContent value="team">
             <Card className="p-8 text-center">
-              <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-display font-semibold mb-2">Store Leaderboard</h3>
-              <p className="text-muted-foreground">
-                Coming soon! Compare with your store colleagues.
+              <Users className="w-12 h-12 text-lavender mx-auto mb-4" />
+              <h3 className="font-display font-semibold mb-2">Create or Join a Team</h3>
+              <p className="text-muted-foreground mb-6">
+                Compete with colleagues and track your team's progress together.
               </p>
+              <Button onClick={() => setLocation("/team")} data-testid="button-create-team">
+                <Plus className="w-4 h-4 mr-2" />
+                Get Started
+              </Button>
             </Card>
           </TabsContent>
         </Tabs>
