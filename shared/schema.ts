@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   displayName: text("display_name"),
   level: integer("level").notNull().default(1),
   xp: integer("xp").notNull().default(0),
+  coins: integer("coins").notNull().default(50),
   totalFactsMastered: integer("total_facts_mastered").notNull().default(0),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
@@ -95,6 +96,25 @@ export const userAchievements = pgTable("user_achievements", {
   unlockedAt: timestamp("unlocked_at").defaultNow(),
 });
 
+// Accessories shop
+export const accessories = pgTable("accessories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // hat, glasses, necklace, background
+  price: integer("price").notNull(),
+  icon: text("icon").notNull(),
+  rarity: text("rarity").notNull().default("common"), // common, rare, epic, legendary
+});
+
+export const userAccessories = pgTable("user_accessories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  accessoryId: varchar("accessory_id").notNull().references(() => accessories.id),
+  equipped: boolean("equipped").notNull().default(false),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   creature: one(creatures, {
@@ -159,6 +179,15 @@ export const insertQuizSessionSchema = createInsertSchema(quizSessions).pick({
   xpEarned: true,
 });
 
+export const insertAccessorySchema = createInsertSchema(accessories).omit({
+  id: true,
+});
+
+export const insertUserAccessorySchema = createInsertSchema(userAccessories).pick({
+  userId: true,
+  accessoryId: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -174,6 +203,10 @@ export type QuizSession = typeof quizSessions.$inferSelect;
 export type InsertQuizSession = z.infer<typeof insertQuizSessionSchema>;
 export type Achievement = typeof achievements.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
+export type Accessory = typeof accessories.$inferSelect;
+export type InsertAccessory = z.infer<typeof insertAccessorySchema>;
+export type UserAccessory = typeof userAccessories.$inferSelect;
+export type InsertUserAccessory = z.infer<typeof insertUserAccessorySchema>;
 
 // Leaderboard entry type
 export type LeaderboardEntry = {

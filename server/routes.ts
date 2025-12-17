@@ -218,6 +218,7 @@ export async function registerRoutes(
       });
       
       const xpEarned = correct ? 10 : 2;
+      const coinsEarned = correct ? 2 : 0;
       const creature = await storage.getCreature(user.id);
       
       if (creature) {
@@ -240,6 +241,7 @@ export async function registerRoutes(
         xp: newXp,
         totalFactsMastered: newTotalFacts,
         level: newLevel,
+        coins: user.coins + coinsEarned,
       });
       
       // Check for evolution based on facts mastered
@@ -275,6 +277,7 @@ export async function registerRoutes(
       const baseXp = score * 10;
       const bonusXp = score === totalQuestions ? 25 : 0;
       const xpEarned = baseXp + bonusXp;
+      const coinsEarned = score * 5 + (score === totalQuestions ? 10 : 0);
       
       await storage.createQuizSession({
         userId: user.id,
@@ -304,6 +307,7 @@ export async function registerRoutes(
         currentStreak: user.currentStreak + 1,
         longestStreak: Math.max(user.longestStreak, user.currentStreak + 1),
         lastActiveDate: new Date().toISOString().split('T')[0],
+        coins: user.coins + coinsEarned,
       });
       
       const newTotalFacts = user.totalFactsMastered + score;
@@ -406,9 +410,11 @@ export async function registerRoutes(
       const { score } = req.body;
       
       const xpEarned = Math.max(10, Math.min(100, score || 50));
+      const coinsEarned = Math.floor(xpEarned / 5);
       
       const updatedUser = await storage.updateUser(user.id, {
         xp: user.xp + xpEarned,
+        coins: user.coins + coinsEarned,
       });
       
       // Update creature interaction
@@ -459,6 +465,97 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating settings:", error);
       res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
+  // Accessory Shop routes
+  app.get("/api/shop/accessories", async (req, res) => {
+    try {
+      const allAccessories = await storage.getAccessories();
+      res.json(allAccessories);
+    } catch (error) {
+      console.error("Error fetching accessories:", error);
+      res.status(500).json({ message: "Failed to fetch accessories" });
+    }
+  });
+
+  app.get("/api/shop/owned", async (req, res) => {
+    try {
+      const user = await ensureDemoUser();
+      const owned = await storage.getUserAccessories(user.id);
+      res.json(owned);
+    } catch (error) {
+      console.error("Error fetching owned accessories:", error);
+      res.status(500).json({ message: "Failed to fetch owned accessories" });
+    }
+  });
+
+  app.post("/api/shop/purchase", async (req, res) => {
+    try {
+      const { accessoryId } = req.body;
+      const user = await ensureDemoUser();
+      
+      const accessory = await storage.getAccessory(accessoryId);
+      if (!accessory) {
+        return res.status(404).json({ message: "Accessory not found" });
+      }
+      
+      if (user.coins < accessory.price) {
+        return res.status(400).json({ message: "Not enough coins" });
+      }
+      
+      // Check if already owned
+      const owned = await storage.getUserAccessories(user.id);
+      if (owned.some(o => o.accessoryId === accessoryId)) {
+        return res.status(400).json({ message: "Already owned" });
+      }
+      
+      // Deduct coins and purchase
+      await storage.updateUser(user.id, {
+        coins: user.coins - accessory.price,
+      });
+      
+      const purchase = await storage.purchaseAccessory(user.id, accessoryId);
+      res.json({ success: true, purchase, newBalance: user.coins - accessory.price });
+    } catch (error) {
+      console.error("Error purchasing accessory:", error);
+      res.status(500).json({ message: "Failed to purchase accessory" });
+    }
+  });
+
+  app.post("/api/shop/equip", async (req, res) => {
+    try {
+      const { userAccessoryId, equipped } = req.body;
+      const user = await ensureDemoUser();
+      
+      // Get the accessory to find its category
+      const owned = await storage.getUserAccessories(user.id);
+      const userAcc = owned.find(o => o.id === userAccessoryId);
+      if (!userAcc) {
+        return res.status(404).json({ message: "Accessory not found" });
+      }
+      
+      // If equipping, first unequip other accessories in the same category
+      if (equipped) {
+        await storage.unequipAccessoriesByCategory(user.id, userAcc.accessory.category);
+      }
+      
+      const result = await storage.equipAccessory(userAccessoryId, equipped);
+      res.json({ success: true, accessory: result });
+    } catch (error) {
+      console.error("Error equipping accessory:", error);
+      res.status(500).json({ message: "Failed to equip accessory" });
+    }
+  });
+
+  app.get("/api/shop/equipped", async (req, res) => {
+    try {
+      const user = await ensureDemoUser();
+      const equipped = await storage.getEquippedAccessories(user.id);
+      res.json(equipped);
+    } catch (error) {
+      console.error("Error fetching equipped accessories:", error);
+      res.status(500).json({ message: "Failed to fetch equipped accessories" });
     }
   });
 

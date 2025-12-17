@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { facts, quizQuestions, users, creatures, achievements } from "@shared/schema";
+import { facts, quizQuestions, users, creatures, achievements, accessories } from "@shared/schema";
 import { sql } from "drizzle-orm";
 
 const retailFacts = [
@@ -496,6 +496,42 @@ export async function seedDatabase() {
         await db.insert(achievements).values(achievement);
       }
       console.log(`Inserted ${achievementsData.length} achievements`);
+    }
+    
+    // Seed accessories
+    const existingAccessories = await db.select().from(accessories).limit(1);
+    const accessoriesData = [
+      // Hats
+      { name: "Party Hat", description: "A colorful cone hat for celebrations", category: "hat", price: 25, icon: "party-popper", rarity: "common" },
+      { name: "Wizard Hat", description: "A mystical purple wizard hat", category: "hat", price: 75, icon: "wand", rarity: "rare" },
+      { name: "Crown", description: "A golden crown fit for royalty", category: "hat", price: 200, icon: "crown", rarity: "epic" },
+      { name: "Halo", description: "A divine golden halo", category: "hat", price: 500, icon: "sparkles", rarity: "legendary" },
+      { name: "Baseball Cap", description: "A casual sporty cap", category: "hat", price: 20, icon: "hard-hat", rarity: "common" },
+      { name: "Top Hat", description: "A classy gentleman's top hat", category: "hat", price: 100, icon: "graduation-cap", rarity: "rare" },
+      // Glasses
+      { name: "Cool Shades", description: "Stylish dark sunglasses", category: "glasses", price: 30, icon: "sunglasses", rarity: "common" },
+      { name: "Nerd Glasses", description: "Smart-looking round glasses", category: "glasses", price: 35, icon: "glasses", rarity: "common" },
+      { name: "Star Glasses", description: "Fun star-shaped glasses", category: "glasses", price: 60, icon: "star", rarity: "rare" },
+      { name: "Monocle", description: "A distinguished monocle", category: "glasses", price: 150, icon: "eye", rarity: "epic" },
+      // Necklaces
+      { name: "Heart Pendant", description: "A sweet heart-shaped necklace", category: "necklace", price: 40, icon: "heart", rarity: "common" },
+      { name: "Star Charm", description: "A sparkling star necklace", category: "necklace", price: 50, icon: "star", rarity: "common" },
+      { name: "Pearl Necklace", description: "Elegant string of pearls", category: "necklace", price: 120, icon: "circle", rarity: "rare" },
+      { name: "Diamond Pendant", description: "A dazzling diamond necklace", category: "necklace", price: 300, icon: "gem", rarity: "epic" },
+      // Backgrounds
+      { name: "Meadow", description: "A peaceful grassy meadow", category: "background", price: 50, icon: "flower", rarity: "common" },
+      { name: "Ocean", description: "A serene ocean view", category: "background", price: 50, icon: "waves", rarity: "common" },
+      { name: "Space", description: "A cosmic starry background", category: "background", price: 100, icon: "rocket", rarity: "rare" },
+      { name: "Rainbow", description: "A colorful rainbow paradise", category: "background", price: 150, icon: "rainbow", rarity: "rare" },
+      { name: "Castle", description: "A majestic castle setting", category: "background", price: 250, icon: "castle", rarity: "epic" },
+      { name: "Northern Lights", description: "Magical aurora borealis", category: "background", price: 400, icon: "sparkles", rarity: "legendary" },
+    ];
+
+    if (existingAccessories.length === 0) {
+      for (const accessory of accessoriesData) {
+        await db.insert(accessories).values(accessory);
+      }
+      console.log(`Inserted ${accessoriesData.length} accessories`);
     }
     
     console.log("Checking for demo user...");

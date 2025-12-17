@@ -1,9 +1,11 @@
 import { 
   users, creatures, facts, flashcards, quizQuestions, quizSessions, achievements, userAchievements,
+  accessories, userAccessories,
   type User, type InsertUser, type Creature, type InsertCreature, 
   type Fact, type InsertFact, type Flashcard, type InsertFlashcard,
   type QuizQuestion, type InsertQuizQuestion, type QuizSession, type InsertQuizSession,
   type Achievement, type UserAchievement,
+  type Accessory, type InsertAccessory, type UserAccessory, type InsertUserAccessory,
   type LeaderboardEntry
 } from "@shared/schema";
 import { db } from "./db";
@@ -38,6 +40,14 @@ export interface IStorage {
   getAchievements(): Promise<Achievement[]>;
   getUserAchievements(userId: string): Promise<UserAchievement[]>;
   unlockAchievement(userId: string, achievementId: string): Promise<UserAchievement>;
+  
+  getAccessories(): Promise<Accessory[]>;
+  getUserAccessories(userId: string): Promise<(UserAccessory & { accessory: Accessory })[]>;
+  purchaseAccessory(userId: string, accessoryId: string): Promise<UserAccessory>;
+  equipAccessory(userAccessoryId: string, equipped: boolean): Promise<UserAccessory | undefined>;
+  getAccessory(id: string): Promise<Accessory | undefined>;
+  unequipAccessoriesByCategory(userId: string, category: string): Promise<void>;
+  getEquippedAccessories(userId: string): Promise<(UserAccessory & { accessory: Accessory })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -175,6 +185,51 @@ export class DatabaseStorage implements IStorage {
   async unlockAchievement(userId: string, achievementId: string): Promise<UserAchievement> {
     const [ua] = await db.insert(userAchievements).values({ userId, achievementId }).returning();
     return ua;
+  }
+
+  async getAccessories(): Promise<Accessory[]> {
+    return db.select().from(accessories);
+  }
+
+  async getAccessory(id: string): Promise<Accessory | undefined> {
+    const [accessory] = await db.select().from(accessories).where(eq(accessories.id, id));
+    return accessory || undefined;
+  }
+
+  async getUserAccessories(userId: string): Promise<(UserAccessory & { accessory: Accessory })[]> {
+    const result = await db
+      .select()
+      .from(userAccessories)
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+      .where(eq(userAccessories.userId, userId));
+    
+    return result.map(r => ({
+      ...r.user_accessories,
+      accessory: r.accessories,
+    }));
+  }
+
+  async purchaseAccessory(userId: string, accessoryId: string): Promise<UserAccessory> {
+    const [ua] = await db.insert(userAccessories).values({ userId, accessoryId }).returning();
+    return ua;
+  }
+
+  async equipAccessory(userAccessoryId: string, equipped: boolean): Promise<UserAccessory | undefined> {
+    const [ua] = await db.update(userAccessories).set({ equipped }).where(eq(userAccessories.id, userAccessoryId)).returning();
+    return ua || undefined;
+  }
+
+  async unequipAccessoriesByCategory(userId: string, category: string): Promise<void> {
+    const userAccs = await this.getUserAccessories(userId);
+    const toUnequip = userAccs.filter(ua => ua.accessory.category === category && ua.equipped);
+    for (const acc of toUnequip) {
+      await db.update(userAccessories).set({ equipped: false }).where(eq(userAccessories.id, acc.id));
+    }
+  }
+
+  async getEquippedAccessories(userId: string): Promise<(UserAccessory & { accessory: Accessory })[]> {
+    const userAccs = await this.getUserAccessories(userId);
+    return userAccs.filter(ua => ua.equipped);
   }
 }
 

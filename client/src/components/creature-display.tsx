@@ -1,12 +1,17 @@
 import { motion } from "framer-motion";
-import { Heart, Sparkles } from "lucide-react";
-import type { Creature } from "@shared/schema";
+import { Heart, Sparkles, Crown, Eye, Star, Gem } from "lucide-react";
+import type { Creature, Accessory } from "@shared/schema";
+
+type EquippedAccessory = {
+  accessory: Accessory;
+};
 
 type CreatureDisplayProps = {
   creature: Creature | null;
   size?: "sm" | "md" | "lg";
   showSparkles?: boolean;
   isFeeding?: boolean;
+  equippedAccessories?: EquippedAccessory[];
 };
 
 const stageColors = {
@@ -48,10 +53,15 @@ export function CreatureDisplay({
   size = "lg",
   showSparkles = false,
   isFeeding = false,
+  equippedAccessories = [],
 }: CreatureDisplayProps) {
   const stage = creature?.stage || 1;
   const health = creature?.health || "happy";
   const colors = stageColors[stage as keyof typeof stageColors] || stageColors[1];
+  
+  const equippedHat = equippedAccessories.find(e => e.accessory.category === "hat");
+  const equippedGlasses = equippedAccessories.find(e => e.accessory.category === "glasses");
+  const equippedNecklace = equippedAccessories.find(e => e.accessory.category === "necklace");
 
   const sizeClasses = {
     sm: "w-24 h-24",
@@ -140,6 +150,53 @@ export function CreatureDisplay({
             transition={{ duration: 1 }}
           >
             <Heart className="w-6 h-6 text-peach fill-peach" />
+          </motion.div>
+        )}
+
+        {equippedHat && (
+          <motion.div
+            className="absolute -top-4 left-1/2 -translate-x-1/2"
+            animate={{ y: [0, -1, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <div className={`${size === 'lg' ? 'w-8 h-8' : size === 'md' ? 'w-6 h-6' : 'w-4 h-4'} rounded-full flex items-center justify-center ${
+              equippedHat.accessory.rarity === 'legendary' ? 'bg-xp-gold/30' :
+              equippedHat.accessory.rarity === 'epic' ? 'bg-purple-500/30' :
+              equippedHat.accessory.rarity === 'rare' ? 'bg-blue-500/30' : 'bg-lavender/30'
+            }`}>
+              <Crown className={`${size === 'lg' ? 'w-5 h-5' : size === 'md' ? 'w-4 h-4' : 'w-3 h-3'} ${
+                equippedHat.accessory.rarity === 'legendary' ? 'text-xp-gold' :
+                equippedHat.accessory.rarity === 'epic' ? 'text-purple-500' :
+                equippedHat.accessory.rarity === 'rare' ? 'text-blue-500' : 'text-lavender'
+              }`} />
+            </div>
+          </motion.div>
+        )}
+
+        {equippedGlasses && size === 'lg' && (
+          <div className="absolute top-[35%] left-1/2 -translate-x-1/2 opacity-70">
+            <Eye className={`w-10 h-3 ${
+              equippedGlasses.accessory.rarity === 'legendary' ? 'text-xp-gold' :
+              equippedGlasses.accessory.rarity === 'epic' ? 'text-purple-500' : 'text-foreground'
+            }`} />
+          </div>
+        )}
+
+        {equippedNecklace && (
+          <motion.div
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <div className={`${size === 'lg' ? 'w-6 h-6' : size === 'md' ? 'w-5 h-5' : 'w-3 h-3'} rounded-full flex items-center justify-center ${
+              equippedNecklace.accessory.rarity === 'legendary' ? 'bg-xp-gold/30' :
+              equippedNecklace.accessory.rarity === 'epic' ? 'bg-purple-500/30' : 'bg-peach/30'
+            }`}>
+              <Gem className={`${size === 'lg' ? 'w-4 h-4' : size === 'md' ? 'w-3 h-3' : 'w-2 h-2'} ${
+                equippedNecklace.accessory.rarity === 'legendary' ? 'text-xp-gold' :
+                equippedNecklace.accessory.rarity === 'epic' ? 'text-purple-500' : 'text-peach'
+              }`} />
+            </div>
           </motion.div>
         )}
       </motion.div>

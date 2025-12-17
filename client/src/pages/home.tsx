@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Utensils, Gamepad2, Sparkles, AlertTriangle } from "lucide-react";
+import { Utensils, Gamepad2, Sparkles, AlertTriangle, Coins, ShoppingBag } from "lucide-react";
 import { CreatureDisplay } from "@/components/creature-display";
 import { HappinessMeter } from "@/components/happiness-meter";
 import { XpBar } from "@/components/xp-bar";
@@ -13,7 +13,7 @@ import { CreatureLoadingSkeleton } from "@/components/loading-skeleton";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { User, Creature } from "@shared/schema";
+import type { User, Creature, Accessory, UserAccessory } from "@shared/schema";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -25,6 +25,10 @@ export default function Home() {
 
   const { data: creature, isLoading: creatureLoading } = useQuery<Creature>({
     queryKey: ["/api/creature"],
+  });
+
+  const { data: equippedAccessories = [] } = useQuery<(UserAccessory & { accessory: Accessory })[]>({
+    queryKey: ["/api/shop/equipped"],
   });
 
   const feedMutation = useMutation({
@@ -99,6 +103,7 @@ export default function Home() {
                   size="lg"
                   showSparkles={creature?.happiness && creature.happiness >= 80}
                   isFeeding={isFeeding}
+                  equippedAccessories={equippedAccessories}
                 />
               </div>
 
@@ -193,13 +198,19 @@ export default function Home() {
           </Card>
           <Card 
             className="p-4 text-center hover-elevate cursor-pointer"
-            onClick={() => setLocation("/leaderboard")}
-            data-testid="card-your-rank"
+            onClick={() => setLocation("/shop")}
+            data-testid="card-coins"
           >
-            <p className="text-3xl font-display font-bold text-mint tabular-nums">
-              #{user?.level || 1}
+            <div className="flex items-center justify-center gap-1">
+              <Coins className="w-6 h-6 text-xp-gold" />
+              <p className="text-3xl font-display font-bold text-xp-gold tabular-nums">
+                {user?.coins || 0}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <ShoppingBag className="w-3 h-3" />
+              Shop
             </p>
-            <p className="text-sm text-muted-foreground">Your Level</p>
           </Card>
         </motion.div>
       </div>

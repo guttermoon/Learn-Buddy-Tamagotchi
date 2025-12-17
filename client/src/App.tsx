@@ -16,6 +16,7 @@ import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import MatchGame from "@/pages/match-game";
 import Achievements from "@/pages/achievements";
+import Shop from "@/pages/shop";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/match" component={MatchGame} />
       <Route path="/achievements" component={Achievements} />
+      <Route path="/shop" component={Shop} />
       <Route component={NotFound} />
     </Switch>
   );
