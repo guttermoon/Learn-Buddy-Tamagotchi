@@ -643,5 +643,238 @@ export async function registerRoutes(
     }
   });
 
+  // Team routes
+  function generateTeamCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  function getTeamStage(totalXp: number): number {
+    const thresholds = [0, 500, 2000, 5000, 10000];
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (totalXp >= thresholds[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
+
+  app.get("/api/teams", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const teams = await storage.getUserTeams(user.id);
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      res.status(500).json({ message: "Failed to fetch teams" });
+    }
+  });
+
+  app.get("/api/teams/:id", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const team = await storage.getTeam(req.params.id);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      const isMember = await storage.isTeamMember(team.id, user.id);
+      if (!isMember) {
+        return res.status(403).json({ message: "Not a team member" });
+      }
+      res.json(team);
+    } catch (error) {
+      console.error("Error fetching team:", error);
+      res.status(500).json({ message: "Failed to fetch team" });
+    }
+  });
+
+  app.post("/api/teams", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const { name, creatureName } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Team name is required" });
+      }
+      
+      const code = generateTeamCode();
+      const team = await storage.createTeam({
+        name,
+        code,
+        creatorId: user.id,
+        creatureName: creatureName || "Team Buddy",
+      });
+      
+      // Add creator as member with creator role
+      await storage.addTeamMember({
+        teamId: team.id,
+        userId: user.id,
+        role: "creator",
+      });
+      
+      res.json(team);
+    } catch (error) {
+      console.error("Error creating team:", error);
+      res.status(500).json({ message: "Failed to create team" });
+    }
+  });
+
+  app.post("/api/teams/join", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ message: "Team code is required" });
+      }
+      
+      const team = await storage.getTeamByCode(code.toUpperCase());
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const isMember = await storage.isTeamMember(team.id, user.id);
+      if (isMember) {
+        return res.status(400).json({ message: "Already a member" });
+      }
+      
+      await storage.addTeamMember({
+        teamId: team.id,
+        userId: user.id,
+        role: "member",
+      });
+      
+      res.json(team);
+    } catch (error) {
+      console.error("Error joining team:", error);
+      res.status(500).json({ message: "Failed to join team" });
+    }
+  });
+
+  app.post("/api/teams/:id/leave", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const team = await storage.getTeam(req.params.id);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      if (team.creatorId === user.id) {
+        return res.status(400).json({ message: "Creator cannot leave the team" });
+      }
+      
+      await storage.removeTeamMember(team.id, user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error leaving team:", error);
+      res.status(500).json({ message: "Failed to leave team" });
+    }
+  });
+
+  app.get("/api/teams/:id/members", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const isMember = await storage.isTeamMember(req.params.id, user.id);
+      if (!isMember) {
+        return res.status(403).json({ message: "Not a team member" });
+      }
+      
+      const members = await storage.getTeamMembers(req.params.id);
+      res.json(members);
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+      res.status(500).json({ message: "Failed to fetch team members" });
+    }
+  });
+
+  app.get("/api/teams/:id/leaderboard", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const isMember = await storage.isTeamMember(req.params.id, user.id);
+      if (!isMember) {
+        return res.status(403).json({ message: "Not a team member" });
+      }
+      
+      const contributions = await storage.getTeamContributions(req.params.id);
+      res.json(contributions);
+    } catch (error) {
+      console.error("Error fetching team leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch team leaderboard" });
+    }
+  });
+
+  app.post("/api/teams/:id/contribute", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const { xp } = req.body;
+      if (!xp || xp <= 0) {
+        return res.status(400).json({ message: "XP amount is required" });
+      }
+      
+      const team = await storage.getTeam(req.params.id);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const isMember = await storage.isTeamMember(team.id, user.id);
+      if (!isMember) {
+        return res.status(403).json({ message: "Not a team member" });
+      }
+      
+      // Record contribution
+      await storage.addTeamContribution({
+        teamId: team.id,
+        userId: user.id,
+        xpContributed: xp,
+      });
+      
+      // Update team XP and stage
+      const newTotalXp = team.totalXp + xp;
+      const newStage = getTeamStage(newTotalXp);
+      await storage.updateTeam(team.id, {
+        totalXp: newTotalXp,
+        creatureStage: newStage,
+      });
+      
+      res.json({ 
+        success: true, 
+        totalXp: newTotalXp, 
+        stage: newStage,
+      });
+    } catch (error) {
+      console.error("Error contributing to team:", error);
+      res.status(500).json({ message: "Failed to contribute to team" });
+    }
+  });
+
   return httpServer;
 }
