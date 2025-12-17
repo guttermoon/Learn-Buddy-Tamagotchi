@@ -167,8 +167,8 @@ export default function Home() {
                 />
 
               {creature && (
-                <div className="mt-4 flex items-center gap-1">
-                  <span className="font-display text-xl font-bold">{creature.name}</span>
+                <div className="mt-4 flex items-center">
+                  <span className="font-display text-xl font-bold leading-none">{creature.name}</span>
                   <RenameDialog currentName={creature.name} />
                 </div>
               )}

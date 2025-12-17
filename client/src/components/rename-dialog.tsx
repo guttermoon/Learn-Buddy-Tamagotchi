@@ -61,7 +61,8 @@ export function RenameDialog({ currentName }: RenameDialogProps) {
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
+          className="px-2"
           data-testid="button-rename"
         >
           <Pencil className="w-4 h-4" />
