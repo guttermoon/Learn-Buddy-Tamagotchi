@@ -327,12 +327,16 @@ export async function registerRoutes(
           userId: user.id,
           xpContributed: xpEarned,
         });
-        const newTeamXp = team.totalXp + xpEarned;
-        const newTeamStage = getTeamStage(newTeamXp);
-        await storage.updateTeam(team.id, {
-          totalXp: newTeamXp,
-          creatureStage: newTeamStage,
-        });
+        // Re-fetch team to get accurate totalXp and increment atomically
+        const updatedTeam = await storage.getTeam(team.id);
+        if (updatedTeam) {
+          const newTeamXp = updatedTeam.totalXp + xpEarned;
+          const newTeamStage = getTeamStage(newTeamXp);
+          await storage.updateTeam(team.id, {
+            totalXp: newTeamXp,
+            creatureStage: newTeamStage,
+          });
+        }
       }
       
       res.json({ success: true, xpEarned, newConfidence });
@@ -413,12 +417,16 @@ export async function registerRoutes(
           userId: user.id,
           xpContributed: xpEarned,
         });
-        const newTeamXp = team.totalXp + xpEarned;
-        const newTeamStage = getTeamStage(newTeamXp);
-        await storage.updateTeam(team.id, {
-          totalXp: newTeamXp,
-          creatureStage: newTeamStage,
-        });
+        // Re-fetch team to get accurate totalXp and increment atomically
+        const updatedTeam = await storage.getTeam(team.id);
+        if (updatedTeam) {
+          const newTeamXp = updatedTeam.totalXp + xpEarned;
+          const newTeamStage = getTeamStage(newTeamXp);
+          await storage.updateTeam(team.id, {
+            totalXp: newTeamXp,
+            creatureStage: newTeamStage,
+          });
+        }
       }
       
       res.json({ success: true, xpEarned, newLevel });
