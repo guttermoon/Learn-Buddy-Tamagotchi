@@ -6,12 +6,14 @@ export default {
   theme: {
     extend: {
       borderRadius: {
-        lg: ".5625rem", /* 9px */
-        md: ".375rem", /* 6px */
-        sm: ".1875rem", /* 3px */
+        lg: ".625rem",
+        md: ".5rem",
+        sm: ".25rem",
+        xl: ".875rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
       },
       colors: {
-        // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
@@ -81,9 +83,29 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        lavender: {
+          DEFAULT: "hsl(var(--lavender) / <alpha-value>)",
+          light: "hsl(var(--lavender-light) / <alpha-value>)",
+        },
+        mint: {
+          DEFAULT: "hsl(var(--mint) / <alpha-value>)",
+          light: "hsl(var(--mint-light) / <alpha-value>)",
+        },
+        peach: {
+          DEFAULT: "hsl(var(--peach) / <alpha-value>)",
+          light: "hsl(var(--peach-light) / <alpha-value>)",
+        },
+        sky: {
+          DEFAULT: "hsl(var(--sky) / <alpha-value>)",
+          light: "hsl(var(--sky-light) / <alpha-value>)",
+        },
+        cream: "hsl(var(--cream) / <alpha-value>)",
+        happiness: "hsl(var(--happiness) / <alpha-value>)",
+        "xp-gold": "hsl(var(--xp-gold) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
+        display: ["var(--font-display)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
@@ -96,10 +118,64 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "breathe": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.02)" },
+        },
+        "bounce-soft": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "33%": { transform: "translateY(-6px) rotate(1deg)" },
+          "66%": { transform: "translateY(-3px) rotate(-1deg)" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
+        "sparkle": {
+          "0%, 100%": { opacity: "0", transform: "scale(0.5)" },
+          "50%": { opacity: "1", transform: "scale(1)" },
+        },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "heart-beat": {
+          "0%, 100%": { transform: "scale(1)" },
+          "14%": { transform: "scale(1.1)" },
+          "28%": { transform: "scale(1)" },
+          "42%": { transform: "scale(1.1)" },
+          "70%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "breathe": "breathe 3s ease-in-out infinite",
+        "bounce-soft": "bounce-soft 0.6s ease-in-out",
+        "float": "float 4s ease-in-out infinite",
+        "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "sparkle": "sparkle 1.5s ease-in-out infinite",
+        "slide-up": "slide-up 0.3s ease-out",
+        "slide-down": "slide-down 0.3s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        "heart-beat": "heart-beat 1.2s ease-in-out",
       },
     },
   },

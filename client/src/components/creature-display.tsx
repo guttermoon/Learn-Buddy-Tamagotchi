@@ -1,0 +1,219 @@
+import { motion } from "framer-motion";
+import { Heart, Sparkles } from "lucide-react";
+import type { Creature } from "@shared/schema";
+
+type CreatureDisplayProps = {
+  creature: Creature | null;
+  size?: "sm" | "md" | "lg";
+  showSparkles?: boolean;
+  isFeeding?: boolean;
+};
+
+const stageColors = {
+  1: { primary: "from-lavender-light to-mint-light", accent: "lavender" },
+  2: { primary: "from-peach-light to-sky-light", accent: "peach" },
+  3: { primary: "from-mint-light to-lavender-light", accent: "mint" },
+};
+
+const stageNames = {
+  1: "Baby",
+  2: "Toddler", 
+  3: "Teen",
+};
+
+const healthEmojis = {
+  happy: { expression: "^‿^", eyeType: "happy" },
+  neutral: { expression: "•_•", eyeType: "neutral" },
+  sad: { expression: "•́_•̀", eyeType: "sad" },
+  neglected: { expression: "╥﹏╥", eyeType: "crying" },
+};
+
+export function CreatureDisplay({
+  creature,
+  size = "lg",
+  showSparkles = false,
+  isFeeding = false,
+}: CreatureDisplayProps) {
+  const stage = creature?.stage || 1;
+  const health = creature?.health || "happy";
+  const colors = stageColors[stage as keyof typeof stageColors] || stageColors[1];
+
+  const sizeClasses = {
+    sm: "w-24 h-24",
+    md: "w-40 h-40",
+    lg: "w-64 h-64",
+  };
+
+  const bodySizeClasses = {
+    sm: "w-16 h-14",
+    md: "w-28 h-24",
+    lg: "w-44 h-40",
+  };
+
+  const eyeSizeClasses = {
+    sm: "w-3 h-3",
+    md: "w-5 h-5",
+    lg: "w-8 h-8",
+  };
+
+  return (
+    <div className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
+      {showSparkles && (
+        <>
+          <motion.div
+            className="absolute top-2 left-4"
+            animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+          >
+            <Sparkles className="w-4 h-4 text-xp-gold" />
+          </motion.div>
+          <motion.div
+            className="absolute top-8 right-6"
+            animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+          >
+            <Sparkles className="w-3 h-3 text-lavender" />
+          </motion.div>
+          <motion.div
+            className="absolute bottom-10 left-8"
+            animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 1 }}
+          >
+            <Sparkles className="w-3 h-3 text-mint" />
+          </motion.div>
+        </>
+      )}
+
+      <motion.div
+        className={`relative ${bodySizeClasses[size]} bg-gradient-to-br ${colors.primary} rounded-[45%] shadow-lg border-2 border-white/30 dark:border-white/10`}
+        animate={
+          isFeeding
+            ? { scale: [1, 1.1, 1], y: [0, -10, 0] }
+            : health === "sad" || health === "neglected"
+            ? { y: [0, 2, 0] }
+            : { scale: [1, 1.02, 1] }
+        }
+        transition={
+          isFeeding
+            ? { duration: 0.5, times: [0, 0.5, 1] }
+            : { duration: 3, repeat: Infinity, ease: "easeInOut" }
+        }
+      >
+        <div className="absolute inset-0 flex items-center justify-center pt-2">
+          <div className="flex gap-3 items-center">
+            <CreatureEye health={health} size={size} position="left" />
+            <CreatureEye health={health} size={size} position="right" />
+          </div>
+        </div>
+
+        <div className="absolute bottom-[30%] left-1/2 -translate-x-1/2">
+          <CreatureMouth health={health} size={size} />
+        </div>
+
+        {health === "happy" && (
+          <>
+            <div className="absolute left-[15%] top-[45%] w-3 h-2 bg-peach/40 rounded-full blur-[2px]" />
+            <div className="absolute right-[15%] top-[45%] w-3 h-2 bg-peach/40 rounded-full blur-[2px]" />
+          </>
+        )}
+
+        {isFeeding && (
+          <motion.div
+            className="absolute -top-2 left-1/2 -translate-x-1/2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: [0, 1, 0], y: [-10, -30] }}
+            transition={{ duration: 1 }}
+          >
+            <Heart className="w-6 h-6 text-peach fill-peach" />
+          </motion.div>
+        )}
+      </motion.div>
+
+      {size === "lg" && creature?.name && (
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
+          <p className="font-display font-semibold text-lg text-foreground">
+            {creature.name}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {stageNames[stage as keyof typeof stageNames]}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreatureEye({
+  health,
+  size,
+  position,
+}: {
+  health: string;
+  size: "sm" | "md" | "lg";
+  position: "left" | "right";
+}) {
+  const eyeSizes = {
+    sm: { outer: "w-4 h-4", inner: "w-2 h-2", shine: "w-1 h-1" },
+    md: { outer: "w-6 h-6", inner: "w-3 h-3", shine: "w-1.5 h-1.5" },
+    lg: { outer: "w-9 h-9", inner: "w-4 h-4", shine: "w-2 h-2" },
+  };
+
+  const sizes = eyeSizes[size];
+
+  if (health === "happy") {
+    return (
+      <div className={`${sizes.outer} flex items-end justify-center`}>
+        <div className="w-full h-[60%] border-t-[3px] border-foreground/80 rounded-t-full" />
+      </div>
+    );
+  }
+
+  if (health === "sad" || health === "neglected") {
+    return (
+      <div className={`relative ${sizes.outer} bg-foreground/80 rounded-full`}>
+        <div className={`absolute ${sizes.inner} bg-white rounded-full top-1 ${position === "left" ? "left-1" : "right-1"}`}>
+          <div className={`absolute ${sizes.shine} bg-foreground/20 rounded-full top-0.5 left-0.5`} />
+        </div>
+        {health === "neglected" && (
+          <motion.div
+            className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-2 bg-sky rounded-full"
+            animate={{ y: [0, 4], opacity: [1, 0] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${sizes.outer} bg-foreground/80 rounded-full`}>
+      <div className={`absolute ${sizes.inner} bg-white rounded-full top-1 ${position === "left" ? "left-1" : "right-1"}`}>
+        <div className={`absolute ${sizes.shine} bg-foreground/20 rounded-full top-0.5 left-0.5`} />
+      </div>
+    </div>
+  );
+}
+
+function CreatureMouth({ health, size }: { health: string; size: "sm" | "md" | "lg" }) {
+  const mouthSizes = {
+    sm: "w-4",
+    md: "w-6",
+    lg: "w-8",
+  };
+
+  if (health === "happy") {
+    return (
+      <div className={`${mouthSizes[size]} h-2 border-b-[3px] border-foreground/70 rounded-b-full`} />
+    );
+  }
+
+  if (health === "sad" || health === "neglected") {
+    return (
+      <div className={`${mouthSizes[size]} h-2 border-t-[3px] border-foreground/70 rounded-t-full`} />
+    );
+  }
+
+  return (
+    <div className={`${mouthSizes[size]} h-0.5 bg-foreground/60 rounded-full`} />
+  );
+}
