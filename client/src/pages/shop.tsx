@@ -135,10 +135,11 @@ export default function Shop() {
 
   const purchaseMutation = useMutation({
     mutationFn: async (accessoryId: string) => {
-      return apiRequest("/api/shop/purchase", "POST", { accessoryId });
+      return apiRequest("POST", "/api/shop/purchase", { accessoryId });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shop/owned"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shop/equipped"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Purchase successful!",
@@ -156,10 +157,11 @@ export default function Shop() {
 
   const equipMutation = useMutation({
     mutationFn: async ({ userAccessoryId, equipped }: { userAccessoryId: string; equipped: boolean }) => {
-      return apiRequest("/api/shop/equip", "POST", { userAccessoryId, equipped });
+      return apiRequest("POST", "/api/shop/equip", { userAccessoryId, equipped });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shop/owned"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shop/equipped"] });
       toast({
         title: "Updated!",
         description: "Your accessory has been updated.",

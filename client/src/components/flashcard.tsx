@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, RotateCcw, Check, RefreshCw } from "lucide-react";
 import type { Fact } from "@shared/schema";
 
 type FlashcardProps = {
@@ -144,16 +145,35 @@ export function Flashcard({
         </AnimatePresence>
       </motion.div>
 
-      <div className="flex items-center justify-between mt-6 px-4">
-        <div className="flex items-center gap-2 text-peach">
-          <ChevronLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Review Again</span>
-        </div>
-        <div className="flex items-center gap-2 text-mint">
-          <span className="text-sm font-medium">Got It!</span>
-          <ChevronRight className="w-5 h-5" />
-        </div>
+      <div className="flex items-center justify-between mt-6 gap-4">
+        <Button
+          variant="outline"
+          className="flex-1 border-peach text-peach hover:bg-peach/10"
+          onClick={() => {
+            onSwipeLeft();
+            setIsFlipped(false);
+          }}
+          data-testid="button-review-again"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Review Again
+        </Button>
+        <Button
+          className="flex-1 bg-mint hover:bg-mint/90 text-white"
+          onClick={() => {
+            onSwipeRight();
+            setIsFlipped(false);
+          }}
+          data-testid="button-got-it"
+        >
+          <Check className="w-4 h-4 mr-2" />
+          Got It!
+        </Button>
       </div>
+
+      <p className="text-xs text-center text-muted-foreground mt-3">
+        Or swipe the card left/right
+      </p>
     </div>
   );
 }

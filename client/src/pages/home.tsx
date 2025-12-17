@@ -101,7 +101,7 @@ export default function Home() {
                 <CreatureDisplay
                   creature={creature || null}
                   size="lg"
-                  showSparkles={creature?.happiness && creature.happiness >= 80}
+                  showSparkles={Boolean(creature?.happiness && creature.happiness >= 80)}
                   isFeeding={isFeeding}
                   equippedAccessories={equippedAccessories}
                 />

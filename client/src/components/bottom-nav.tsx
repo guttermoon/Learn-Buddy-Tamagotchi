@@ -25,7 +25,7 @@ export function BottomNav() {
               <motion.button
                 key={item.path}
                 onClick={() => setLocation(item.path)}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors min-w-[64px] ${
+                className={`flex flex-col items-center gap-1 px-2 sm:px-4 py-2 rounded-xl transition-colors min-w-[48px] sm:min-w-[64px] ${
                   isActive
                     ? "text-lavender"
                     : "text-muted-foreground hover:text-foreground"
