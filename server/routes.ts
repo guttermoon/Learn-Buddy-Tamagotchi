@@ -27,13 +27,58 @@ export async function registerRoutes(
 
   app.get("/api/user", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      let user = await ensureDemoUser();
+      
+      // Check for daily login streak
+      const today = new Date().toISOString().split('T')[0];
+      const lastActive = user.lastActiveDate;
+      
+      if (lastActive !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        let newStreak = user.currentStreak;
+        let xpBonus = 0;
+        
+        if (lastActive === yesterdayStr) {
+          // Consecutive day login - increase streak
+          newStreak = user.currentStreak + 1;
+          xpBonus = 5; // 5 XP daily login reward
+        } else if (!lastActive || lastActive < yesterdayStr) {
+          // Streak broken - reset to 1
+          newStreak = 1;
+          xpBonus = 5; // Still get XP for logging in
+        }
+        
+        const newXp = user.xp + xpBonus;
+        const newLevel = Math.floor(newXp / 100) + 1;
+        
+        user = await storage.updateUser(user.id, {
+          lastActiveDate: today,
+          currentStreak: newStreak,
+          longestStreak: Math.max(user.longestStreak, newStreak),
+          xp: newXp,
+          level: newLevel,
+        }) || user;
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+
+  function getStageFromFacts(factsMastered: number): number {
+    const thresholds = [0, 101, 301, 601, 1001];
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (factsMastered >= thresholds[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
 
   app.get("/api/creature", async (req, res) => {
     try {
@@ -65,10 +110,14 @@ export async function registerRoutes(
         newHappiness = Math.max(0, creature.happiness - 10);
       }
       
-      if (newHealth !== creature.health || newHappiness !== creature.happiness) {
+      // Calculate stage based on user's facts mastered
+      const newStage = getStageFromFacts(user.totalFactsMastered);
+      
+      if (newHealth !== creature.health || newHappiness !== creature.happiness || newStage !== creature.stage) {
         creature = await storage.updateCreature(creature.id, {
           health: newHealth,
           happiness: newHappiness,
+          stage: newStage,
         }) || creature;
       }
       
@@ -184,11 +233,22 @@ export async function registerRoutes(
         ? user.totalFactsMastered + 1 
         : user.totalFactsMastered;
       
+      const newXp = user.xp + xpEarned;
+      const newLevel = Math.floor(newXp / 100) + 1;
+      
       await storage.updateUser(user.id, {
-        xp: user.xp + xpEarned,
+        xp: newXp,
         totalFactsMastered: newTotalFacts,
-        level: Math.floor((user.xp + xpEarned) / 100) + 1,
+        level: newLevel,
       });
+      
+      // Check for evolution based on facts mastered
+      if (newTotalFacts > user.totalFactsMastered && creature) {
+        const newStage = getStageFromFacts(newTotalFacts);
+        if (newStage > creature.stage) {
+          await storage.updateCreature(creature.id, { stage: newStage });
+        }
+      }
       
       res.json({ success: true, xpEarned, newConfidence });
     } catch (error) {
@@ -246,8 +306,10 @@ export async function registerRoutes(
         lastActiveDate: new Date().toISOString().split('T')[0],
       });
       
-      if (creature && newLevel > user.level) {
-        const newStage = newLevel >= 6 ? 3 : newLevel >= 3 ? 2 : 1;
+      const newTotalFacts = user.totalFactsMastered + score;
+      if (creature) {
+        // Evolution based on facts mastered using 5-stage thresholds
+        const newStage = getStageFromFacts(newTotalFacts);
         if (newStage > creature.stage) {
           await storage.updateCreature(creature.id, { stage: newStage });
         }
@@ -277,6 +339,126 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching facts:", error);
       res.status(500).json({ message: "Failed to fetch facts" });
+    }
+  });
+
+  app.get("/api/daily-fact", async (req, res) => {
+    try {
+      const allFacts = await storage.getFacts();
+      if (allFacts.length === 0) {
+        return res.status(404).json({ message: "No facts available" });
+      }
+      
+      // Get a "random" fact based on the current day
+      const today = new Date();
+      const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+      const factIndex = dayOfYear % allFacts.length;
+      
+      res.json(allFacts[factIndex]);
+    } catch (error) {
+      console.error("Error fetching daily fact:", error);
+      res.status(500).json({ message: "Failed to fetch daily fact" });
+    }
+  });
+
+  app.get("/api/achievements", async (req, res) => {
+    try {
+      const user = await ensureDemoUser();
+      const allAchievements = await storage.getAchievements();
+      const userAchievements = await storage.getUserAchievements(user.id);
+      const creature = await storage.getCreature(user.id);
+      
+      // Check which achievements should be unlocked
+      const achievementsWithStatus = allAchievements.map((achievement) => {
+        const isUnlocked = userAchievements.some((ua) => ua.achievementId === achievement.id);
+        let progress = 0;
+        let maxProgress = 1;
+        
+        if (achievement.requirement.startsWith("facts_")) {
+          maxProgress = parseInt(achievement.requirement.split("_")[1]);
+          progress = Math.min(user.totalFactsMastered, maxProgress);
+        } else if (achievement.requirement.startsWith("streak_")) {
+          maxProgress = parseInt(achievement.requirement.split("_")[1]);
+          progress = Math.min(user.longestStreak, maxProgress);
+        } else if (achievement.requirement.startsWith("stage_")) {
+          maxProgress = parseInt(achievement.requirement.split("_")[1]);
+          progress = Math.min(creature?.stage || 1, maxProgress);
+        }
+        
+        return {
+          ...achievement,
+          isUnlocked,
+          progress,
+          maxProgress,
+        };
+      });
+      
+      res.json(achievementsWithStatus);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  app.post("/api/minigame/complete", async (req, res) => {
+    try {
+      const user = await ensureDemoUser();
+      const { score } = req.body;
+      
+      const xpEarned = Math.max(10, Math.min(100, score || 50));
+      
+      const updatedUser = await storage.updateUser(user.id, {
+        xp: user.xp + xpEarned,
+      });
+      
+      // Update creature interaction
+      const creature = await storage.getCreature(user.id);
+      if (creature) {
+        const newHappiness = Math.min(100, creature.happiness + 10);
+        await storage.updateCreature(creature.id, {
+          happiness: newHappiness,
+          health: newHappiness >= 70 ? "happy" : newHappiness >= 40 ? "neutral" : "sad",
+          lastInteractionAt: new Date(),
+        });
+      }
+      
+      res.json({ xpEarned, newTotal: updatedUser?.xp });
+    } catch (error) {
+      console.error("Error completing minigame:", error);
+      res.status(500).json({ message: "Failed to complete minigame" });
+    }
+  });
+
+  app.get("/api/user/settings", async (req, res) => {
+    try {
+      const user = await ensureDemoUser();
+      res.json({
+        notificationTime: user.notificationTime || "09:00",
+        showOnLeaderboard: user.showOnLeaderboard ?? true,
+      });
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/user/settings", async (req, res) => {
+    try {
+      const user = await ensureDemoUser();
+      const { notificationTime, showOnLeaderboard } = req.body;
+      
+      const updatedUser = await storage.updateUser(user.id, {
+        ...(notificationTime !== undefined && { notificationTime }),
+        ...(showOnLeaderboard !== undefined && { showOnLeaderboard }),
+      });
+      
+      res.json({
+        notificationTime: updatedUser?.notificationTime || "09:00",
+        showOnLeaderboard: updatedUser?.showOnLeaderboard ?? true,
+      });
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      res.status(500).json({ message: "Failed to update settings" });
     }
   });
 

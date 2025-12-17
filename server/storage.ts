@@ -3,6 +3,7 @@ import {
   type User, type InsertUser, type Creature, type InsertCreature, 
   type Fact, type InsertFact, type Flashcard, type InsertFlashcard,
   type QuizQuestion, type InsertQuizQuestion, type QuizSession, type InsertQuizSession,
+  type Achievement, type UserAchievement,
   type LeaderboardEntry
 } from "@shared/schema";
 import { db } from "./db";
@@ -33,6 +34,10 @@ export interface IStorage {
   createQuizSession(session: InsertQuizSession): Promise<QuizSession>;
   
   getLeaderboard(limit?: number): Promise<LeaderboardEntry[]>;
+  
+  getAchievements(): Promise<Achievement[]>;
+  getUserAchievements(userId: string): Promise<UserAchievement[]>;
+  unlockAchievement(userId: string, achievementId: string): Promise<UserAchievement>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -157,6 +162,19 @@ export class DatabaseStorage implements IStorage {
       rank: index + 1,
       ...entry,
     }));
+  }
+
+  async getAchievements(): Promise<Achievement[]> {
+    return db.select().from(achievements);
+  }
+
+  async getUserAchievements(userId: string): Promise<UserAchievement[]> {
+    return db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
+  }
+
+  async unlockAchievement(userId: string, achievementId: string): Promise<UserAchievement> {
+    const [ua] = await db.insert(userAchievements).values({ userId, achievementId }).returning();
+    return ua;
   }
 }
 

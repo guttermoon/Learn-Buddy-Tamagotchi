@@ -7,9 +7,31 @@ type EvolutionTimelineProps = {
 };
 
 const stages = [
-  { stage: 1, name: "Baby", factsRequired: 0, description: "Just hatched!" },
-  { stage: 2, name: "Toddler", factsRequired: 100, description: "Learning to walk" },
-  { stage: 3, name: "Teen", factsRequired: 300, description: "Growing strong" },
+  { stage: 1, name: "Baby", factsRequired: 0, description: "Just hatched!", 
+    currentBg: "bg-lavender-light dark:bg-lavender/20 ring-2 ring-lavender",
+    unlockedBg: "bg-lavender-light/50 dark:bg-lavender/10",
+    circleCurrent: "bg-lavender text-white",
+    circleUnlocked: "bg-lavender/60 text-white" },
+  { stage: 2, name: "Toddler", factsRequired: 101, description: "Learning to walk", 
+    currentBg: "bg-peach-light dark:bg-peach/20 ring-2 ring-peach",
+    unlockedBg: "bg-peach-light/50 dark:bg-peach/10",
+    circleCurrent: "bg-peach text-white",
+    circleUnlocked: "bg-peach/60 text-white" },
+  { stage: 3, name: "Teen", factsRequired: 301, description: "Growing strong", 
+    currentBg: "bg-mint-light dark:bg-mint/20 ring-2 ring-mint",
+    unlockedBg: "bg-mint-light/50 dark:bg-mint/10",
+    circleCurrent: "bg-mint text-white",
+    circleUnlocked: "bg-mint/60 text-white" },
+  { stage: 4, name: "Adult", factsRequired: 601, description: "Fully grown!", 
+    currentBg: "bg-sky-light dark:bg-sky/20 ring-2 ring-sky",
+    unlockedBg: "bg-sky-light/50 dark:bg-sky/10",
+    circleCurrent: "bg-sky text-white",
+    circleUnlocked: "bg-sky/60 text-white" },
+  { stage: 5, name: "Master", factsRequired: 1001, description: "Legendary!", 
+    currentBg: "bg-xp-gold/20 dark:bg-xp-gold/20 ring-2 ring-xp-gold",
+    unlockedBg: "bg-xp-gold/10 dark:bg-xp-gold/10",
+    circleCurrent: "bg-xp-gold text-white",
+    circleUnlocked: "bg-xp-gold/60 text-white" },
 ];
 
 export function EvolutionTimeline({ currentStage, totalFactsMastered }: EvolutionTimelineProps) {
@@ -27,39 +49,39 @@ export function EvolutionTimeline({ currentStage, totalFactsMastered }: Evolutio
         return (
           <div key={stage.stage} className="flex items-center flex-1">
             <motion.div
-              className={`relative flex flex-col items-center p-3 rounded-xl min-w-[100px] ${
+              className={`relative flex flex-col items-center p-2 rounded-xl min-w-[60px] ${
                 isCurrent 
-                  ? "bg-lavender-light dark:bg-lavender/20 ring-2 ring-lavender" 
+                  ? stage.currentBg 
                   : isUnlocked 
-                    ? "bg-mint-light dark:bg-mint/20" 
+                    ? stage.unlockedBg 
                     : "bg-muted"
               }`}
               whileHover={{ scale: 1.02 }}
             >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
                 isCurrent 
-                  ? "bg-lavender text-white" 
+                  ? stage.circleCurrent 
                   : isUnlocked 
-                    ? "bg-mint text-white" 
+                    ? stage.circleUnlocked 
                     : "bg-muted-foreground/20 text-muted-foreground"
               }`}>
                 {isUnlocked ? (
                   isCurrent ? (
-                    <span className="font-display font-bold text-lg">{stage.stage}</span>
+                    <span className="font-display font-bold text-sm">{stage.stage}</span>
                   ) : (
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4" />
                   )
                 ) : (
-                  <Lock className="w-4 h-4" />
+                  <Lock className="w-3 h-3" />
                 )}
               </div>
-              <span className={`font-display font-semibold text-sm ${
+              <span className={`font-display font-semibold text-xs ${
                 isUnlocked ? "text-foreground" : "text-muted-foreground"
               }`}>
                 {stage.name}
               </span>
-              <span className="text-xs text-muted-foreground mt-0.5">
-                {stage.factsRequired}+ facts
+              <span className="text-[10px] text-muted-foreground">
+                {stage.factsRequired}+
               </span>
             </motion.div>
 

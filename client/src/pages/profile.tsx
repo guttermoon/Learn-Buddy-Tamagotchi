@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, User as UserIcon, BookOpen, Flame, Star, LogOut } from "lucide-react";
+import { ArrowLeft, Settings as SettingsIcon, BookOpen, Flame, Star, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -61,8 +61,13 @@ export default function Profile() {
             </Button>
             <h1 className="font-display font-bold text-2xl">Profile</h1>
           </div>
-          <Button variant="ghost" size="icon" data-testid="button-settings">
-            <Settings className="w-5 h-5" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setLocation("/settings")}
+            data-testid="button-settings"
+          >
+            <SettingsIcon className="w-5 h-5" />
           </Button>
         </motion.div>
 

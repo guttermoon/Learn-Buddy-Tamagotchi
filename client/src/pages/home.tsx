@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Utensils, Gamepad2, Sparkles, BookOpen } from "lucide-react";
+import { Utensils, Gamepad2, Sparkles, AlertTriangle } from "lucide-react";
 import { CreatureDisplay } from "@/components/creature-display";
 import { HappinessMeter } from "@/components/happiness-meter";
 import { XpBar } from "@/components/xp-bar";
 import { StreakBadge } from "@/components/streak-badge";
 import { ActionButton } from "@/components/action-button";
+import { DailyFactCard } from "@/components/daily-fact-card";
 import { CreatureLoadingSkeleton } from "@/components/loading-skeleton";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +115,28 @@ export default function Home() {
           )}
         </motion.div>
 
+        {creature?.health === "neglected" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="p-4 bg-destructive/10 border-destructive/30">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+                <div>
+                  <h4 className="font-display font-semibold text-destructive mb-1">
+                    Your buddy needs help!
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {creature.name || "Buddy"} has been feeling lonely. Complete 3 flashcards or a quiz to restore their happiness!
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -134,7 +157,7 @@ export default function Home() {
               <ActionButton
                 icon={Gamepad2}
                 label="Play"
-                onClick={() => setLocation("/quiz")}
+                onClick={() => setLocation("/match")}
                 variant="secondary"
                 testId="button-play"
               />
@@ -149,24 +172,7 @@ export default function Home() {
             </div>
           </Card>
 
-          <Card 
-            className="p-4 hover-elevate cursor-pointer"
-            onClick={() => setLocation("/learn")}
-            data-testid="card-daily-fact"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-sky-light dark:bg-sky/20 rounded-xl">
-                <BookOpen className="w-6 h-6 text-sky" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-display font-semibold">Daily Fact</h4>
-                <p className="text-sm text-muted-foreground">
-                  Learn something new today!
-                </p>
-              </div>
-              <Badge className="bg-sky text-white">New</Badge>
-            </div>
-          </Card>
+          <DailyFactCard onClick={() => setLocation("/learn")} />
         </motion.div>
 
         <motion.div

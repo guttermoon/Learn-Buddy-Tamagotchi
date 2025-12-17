@@ -10,16 +10,31 @@ type CreatureDisplayProps = {
 };
 
 const stageColors = {
-  1: { primary: "from-lavender-light to-mint-light", accent: "lavender" },
-  2: { primary: "from-peach-light to-sky-light", accent: "peach" },
-  3: { primary: "from-mint-light to-lavender-light", accent: "mint" },
+  1: { primary: "from-lavender-light to-mint-light", accent: "lavender", glow: "lavender/30" },
+  2: { primary: "from-peach-light to-sky-light", accent: "peach", glow: "peach/30" },
+  3: { primary: "from-mint-light to-lavender-light", accent: "mint", glow: "mint/30" },
+  4: { primary: "from-sky-light to-peach-light", accent: "sky", glow: "sky/40" },
+  5: { primary: "from-xp-gold/40 to-lavender", accent: "xp-gold", glow: "xp-gold/50" },
 };
 
 const stageNames = {
   1: "Baby",
   2: "Toddler", 
   3: "Teen",
+  4: "Adult",
+  5: "Master",
 };
+
+const stageThresholds = [0, 101, 301, 601, 1001];
+
+export function getStageFromFacts(factsMastered: number): number {
+  for (let i = stageThresholds.length - 1; i >= 0; i--) {
+    if (factsMastered >= stageThresholds[i]) {
+      return i + 1;
+    }
+  }
+  return 1;
+}
 
 const healthEmojis = {
   happy: { expression: "^‿^", eyeType: "happy" },

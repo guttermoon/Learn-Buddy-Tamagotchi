@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   longestStreak: integer("longest_streak").notNull().default(0),
   lastActiveDate: text("last_active_date"),
   dailyFactTime: text("daily_fact_time").default("09:00"),
+  notificationTime: text("notification_time").default("09:00"),
   showOnLeaderboard: boolean("show_on_leaderboard").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -13,6 +13,9 @@ import Quiz from "@/pages/quiz";
 import Progress from "@/pages/progress";
 import Leaderboard from "@/pages/leaderboard";
 import Profile from "@/pages/profile";
+import Settings from "@/pages/settings";
+import MatchGame from "@/pages/match-game";
+import Achievements from "@/pages/achievements";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +27,9 @@ function Router() {
       <Route path="/progress" component={Progress} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/profile" component={Profile} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/match" component={MatchGame} />
+      <Route path="/achievements" component={Achievements} />
       <Route component={NotFound} />
     </Switch>
   );

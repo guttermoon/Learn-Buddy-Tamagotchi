@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, BookOpen, Flame, Star, Trophy } from "lucide-react";
+import { ArrowLeft, BookOpen, Flame, Star, Trophy, Award, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
@@ -140,14 +140,23 @@ export default function Progress() {
           transition={{ delay: 0.4 }}
         >
           <h3 className="font-display font-semibold text-lg mb-4">Achievements</h3>
-          <Card className="p-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-              <Trophy className="w-8 h-8 text-muted-foreground" />
+          <Card 
+            className="p-4 hover-elevate cursor-pointer"
+            onClick={() => setLocation("/achievements")}
+            data-testid="card-achievements"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-xp-gold/20 rounded-full flex items-center justify-center">
+                <Award className="w-6 h-6 text-xp-gold" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-display font-semibold">View Achievements</h4>
+                <p className="text-sm text-muted-foreground">
+                  Track your milestones and badges
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </div>
-            <h4 className="font-display font-semibold mb-2">Coming Soon</h4>
-            <p className="text-sm text-muted-foreground">
-              Achievements will be available in the next update!
-            </p>
           </Card>
         </motion.div>
       </div>
