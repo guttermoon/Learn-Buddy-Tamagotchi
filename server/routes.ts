@@ -92,6 +92,16 @@ export async function registerRoutes(
     return 1;
   }
 
+  function getTeamStage(totalXp: number): number {
+    const thresholds = [0, 500, 2000, 5000, 10000];
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (totalXp >= thresholds[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
+
   app.get("/api/creature", async (req, res) => {
     try {
       const user = await getCurrentUser(req);
@@ -309,6 +319,22 @@ export async function registerRoutes(
         }
       }
       
+      // Contribute to team creature if user is in a team
+      const userTeams = await storage.getUserTeams(user.id);
+      for (const team of userTeams) {
+        await storage.addTeamContribution({
+          teamId: team.id,
+          userId: user.id,
+          xpContributed: xpEarned,
+        });
+        const newTeamXp = team.totalXp + xpEarned;
+        const newTeamStage = getTeamStage(newTeamXp);
+        await storage.updateTeam(team.id, {
+          totalXp: newTeamXp,
+          creatureStage: newTeamStage,
+        });
+      }
+      
       res.json({ success: true, xpEarned, newConfidence });
     } catch (error) {
       console.error("Error reviewing flashcard:", error);
@@ -377,6 +403,22 @@ export async function registerRoutes(
         if (newStage > creature.stage) {
           await storage.updateCreature(creature.id, { stage: newStage });
         }
+      }
+      
+      // Contribute to team creature if user is in a team
+      const userTeams = await storage.getUserTeams(user.id);
+      for (const team of userTeams) {
+        await storage.addTeamContribution({
+          teamId: team.id,
+          userId: user.id,
+          xpContributed: xpEarned,
+        });
+        const newTeamXp = team.totalXp + xpEarned;
+        const newTeamStage = getTeamStage(newTeamXp);
+        await storage.updateTeam(team.id, {
+          totalXp: newTeamXp,
+          creatureStage: newTeamStage,
+        });
       }
       
       res.json({ success: true, xpEarned, newLevel });
@@ -651,16 +693,6 @@ export async function registerRoutes(
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
-  }
-
-  function getTeamStage(totalXp: number): number {
-    const thresholds = [0, 500, 2000, 5000, 10000];
-    for (let i = thresholds.length - 1; i >= 0; i--) {
-      if (totalXp >= thresholds[i]) {
-        return i + 1;
-      }
-    }
-    return 1;
   }
 
   app.get("/api/teams", async (req, res) => {

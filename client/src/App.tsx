@@ -20,6 +20,7 @@ import Settings from "@/pages/settings";
 import MatchGame from "@/pages/match-game";
 import Achievements from "@/pages/achievements";
 import Shop from "@/pages/shop";
+import Team from "@/pages/team";
 import NotFound from "@/pages/not-found";
 
 function AuthenticatedRouter() {
@@ -35,6 +36,7 @@ function AuthenticatedRouter() {
       <Route path="/match" component={MatchGame} />
       <Route path="/achievements" component={Achievements} />
       <Route path="/shop" component={Shop} />
+      <Route path="/team" component={Team} />
       <Route component={NotFound} />
     </Switch>
   );
