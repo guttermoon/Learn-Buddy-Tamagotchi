@@ -151,7 +151,7 @@ export default function Home() {
             <h3 className="font-display font-semibold text-lg mb-4 text-center">
               Take Care of {creature?.name || "Your Buddy"}
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
               <ActionButton
                 icon={Utensils}
                 label="Feed"

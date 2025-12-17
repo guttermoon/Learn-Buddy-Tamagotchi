@@ -28,12 +28,12 @@ export function ActionButton({
     <motion.button
       onClick={onClick}
       disabled={disabled}
-      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl ${variantStyles[variant]} shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]`}
+      className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-2xl ${variantStyles[variant]} shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full`}
       whileHover={{ scale: disabled ? 1 : 1.02 }}
       whileTap={{ scale: disabled ? 1 : 0.98 }}
       data-testid={testId}
     >
-      <Icon className="w-7 h-7" />
+      <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
       <span className="font-display font-semibold text-sm">{label}</span>
     </motion.button>
   );

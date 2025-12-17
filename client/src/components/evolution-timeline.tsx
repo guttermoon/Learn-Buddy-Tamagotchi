@@ -36,7 +36,7 @@ const stages = [
 
 export function EvolutionTimeline({ currentStage, totalFactsMastered }: EvolutionTimelineProps) {
   return (
-    <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+    <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto pb-2 px-1">
       {stages.map((stage, index) => {
         const isUnlocked = currentStage >= stage.stage;
         const isCurrent = currentStage === stage.stage;
@@ -49,7 +49,7 @@ export function EvolutionTimeline({ currentStage, totalFactsMastered }: Evolutio
         return (
           <div key={stage.stage} className="flex items-center flex-1">
             <motion.div
-              className={`relative flex flex-col items-center p-2 rounded-xl min-w-[60px] ${
+              className={`relative flex flex-col items-center p-1.5 sm:p-2 rounded-xl min-w-[50px] sm:min-w-[60px] ${
                 isCurrent 
                   ? stage.currentBg 
                   : isUnlocked 
@@ -86,7 +86,7 @@ export function EvolutionTimeline({ currentStage, totalFactsMastered }: Evolutio
             </motion.div>
 
             {index < stages.length - 1 && (
-              <div className="flex-1 h-1 mx-2 bg-muted rounded-full overflow-hidden min-w-[20px]">
+              <div className="flex-1 h-1 mx-1 sm:mx-2 bg-muted rounded-full overflow-hidden min-w-[12px] sm:min-w-[20px]">
                 <motion.div
                   className="h-full bg-gradient-to-r from-lavender to-mint"
                   initial={{ width: 0 }}
