@@ -59,14 +59,12 @@ export function RenameDialog({ currentName }: RenameDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="px-2"
+        <button
+          className="text-muted-foreground hover:text-foreground transition-colors p-1"
           data-testid="button-rename"
         >
-          <Pencil className="w-4 h-4" />
-        </Button>
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[350px]">
         <form onSubmit={handleSubmit}>
