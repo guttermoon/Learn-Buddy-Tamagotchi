@@ -916,5 +916,313 @@ export async function registerRoutes(
     }
   });
 
+  // Gift routes
+  app.get("/api/gifts/inbox", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const gifts = await storage.getPendingGiftsForUser(user.id);
+      res.json(gifts);
+    } catch (error) {
+      console.error("Error fetching gift inbox:", error);
+      res.status(500).json({ message: "Failed to fetch gift inbox" });
+    }
+  });
+
+  app.get("/api/gifts/sent", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const gifts = await storage.getSentGifts(user.id);
+      res.json(gifts);
+    } catch (error) {
+      console.error("Error fetching sent gifts:", error);
+      res.status(500).json({ message: "Failed to fetch sent gifts" });
+    }
+  });
+
+  app.post("/api/gifts", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const { recipientUsername, userAccessoryId, message } = req.body;
+      
+      if (!recipientUsername || !userAccessoryId) {
+        return res.status(400).json({ message: "Recipient and accessory are required" });
+      }
+      
+      // Verify sender owns the accessory
+      const userAccessory = await storage.getUserAccessory(userAccessoryId);
+      if (!userAccessory || userAccessory.userId !== user.id) {
+        return res.status(403).json({ message: "You don't own this accessory" });
+      }
+      
+      // Make sure it's not equipped
+      if (userAccessory.equipped) {
+        return res.status(400).json({ message: "Unequip accessory before gifting" });
+      }
+      
+      // Find recipient
+      const recipient = await storage.getUserByUsername(recipientUsername);
+      if (!recipient) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      if (recipient.id === user.id) {
+        return res.status(400).json({ message: "Cannot gift to yourself" });
+      }
+      
+      const gift = await storage.createGift({
+        senderUserId: user.id,
+        recipientUserId: recipient.id,
+        userAccessoryId,
+        message: message || null,
+      });
+      
+      res.json({ success: true, gift });
+    } catch (error) {
+      console.error("Error creating gift:", error);
+      res.status(500).json({ message: "Failed to create gift" });
+    }
+  });
+
+  app.post("/api/gifts/:id/accept", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const gift = await storage.getGift(req.params.id);
+      if (!gift) {
+        return res.status(404).json({ message: "Gift not found" });
+      }
+      
+      if (gift.recipientUserId !== user.id) {
+        return res.status(403).json({ message: "Not your gift to accept" });
+      }
+      
+      if (gift.status !== "pending") {
+        return res.status(400).json({ message: "Gift already resolved" });
+      }
+      
+      // Transfer ownership
+      await storage.transferAccessoryOwnership(gift.userAccessoryId, user.id);
+      await storage.updateGiftStatus(gift.id, "accepted");
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error accepting gift:", error);
+      res.status(500).json({ message: "Failed to accept gift" });
+    }
+  });
+
+  app.post("/api/gifts/:id/decline", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const gift = await storage.getGift(req.params.id);
+      if (!gift) {
+        return res.status(404).json({ message: "Gift not found" });
+      }
+      
+      if (gift.recipientUserId !== user.id) {
+        return res.status(403).json({ message: "Not your gift to decline" });
+      }
+      
+      if (gift.status !== "pending") {
+        return res.status(400).json({ message: "Gift already resolved" });
+      }
+      
+      await storage.updateGiftStatus(gift.id, "declined");
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error declining gift:", error);
+      res.status(500).json({ message: "Failed to decline gift" });
+    }
+  });
+
+  // Trade routes
+  app.get("/api/trades/inbox", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const trades = await storage.getPendingTradesForUser(user.id);
+      res.json(trades);
+    } catch (error) {
+      console.error("Error fetching trade inbox:", error);
+      res.status(500).json({ message: "Failed to fetch trade inbox" });
+    }
+  });
+
+  app.get("/api/trades/sent", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const trades = await storage.getSentTrades(user.id);
+      res.json(trades);
+    } catch (error) {
+      console.error("Error fetching sent trades:", error);
+      res.status(500).json({ message: "Failed to fetch sent trades" });
+    }
+  });
+
+  app.post("/api/trades", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const { recipientUsername, proposerAccessoryId, recipientAccessoryId, note } = req.body;
+      
+      if (!recipientUsername || !proposerAccessoryId || !recipientAccessoryId) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      // Verify proposer owns their accessory
+      const proposerAcc = await storage.getUserAccessory(proposerAccessoryId);
+      if (!proposerAcc || proposerAcc.userId !== user.id) {
+        return res.status(403).json({ message: "You don't own this accessory" });
+      }
+      
+      if (proposerAcc.equipped) {
+        return res.status(400).json({ message: "Unequip your accessory before trading" });
+      }
+      
+      // Find recipient
+      const recipient = await storage.getUserByUsername(recipientUsername);
+      if (!recipient) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      if (recipient.id === user.id) {
+        return res.status(400).json({ message: "Cannot trade with yourself" });
+      }
+      
+      // Verify recipient owns the requested accessory
+      const recipientAcc = await storage.getUserAccessory(recipientAccessoryId);
+      if (!recipientAcc || recipientAcc.userId !== recipient.id) {
+        return res.status(403).json({ message: "Recipient doesn't own that accessory" });
+      }
+      
+      const trade = await storage.createTrade({
+        proposerUserId: user.id,
+        recipientUserId: recipient.id,
+        proposerAccessoryId,
+        recipientAccessoryId,
+        proposerNote: note || null,
+      });
+      
+      res.json({ success: true, trade });
+    } catch (error) {
+      console.error("Error creating trade:", error);
+      res.status(500).json({ message: "Failed to create trade" });
+    }
+  });
+
+  app.post("/api/trades/:id/accept", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const trade = await storage.getTrade(req.params.id);
+      if (!trade) {
+        return res.status(404).json({ message: "Trade not found" });
+      }
+      
+      if (trade.recipientUserId !== user.id) {
+        return res.status(403).json({ message: "Not your trade to accept" });
+      }
+      
+      if (trade.status !== "pending") {
+        return res.status(400).json({ message: "Trade already resolved" });
+      }
+      
+      // Verify both accessories are still valid
+      const proposerAcc = await storage.getUserAccessory(trade.proposerAccessoryId);
+      const recipientAcc = await storage.getUserAccessory(trade.recipientAccessoryId);
+      
+      if (!proposerAcc || proposerAcc.userId !== trade.proposerUserId) {
+        return res.status(400).json({ message: "Proposer no longer owns their accessory" });
+      }
+      
+      if (!recipientAcc || recipientAcc.userId !== user.id) {
+        return res.status(400).json({ message: "You no longer own your accessory" });
+      }
+      
+      // Swap ownership
+      await storage.transferAccessoryOwnership(trade.proposerAccessoryId, user.id);
+      await storage.transferAccessoryOwnership(trade.recipientAccessoryId, trade.proposerUserId);
+      await storage.updateTradeStatus(trade.id, "accepted");
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error accepting trade:", error);
+      res.status(500).json({ message: "Failed to accept trade" });
+    }
+  });
+
+  app.post("/api/trades/:id/decline", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const trade = await storage.getTrade(req.params.id);
+      if (!trade) {
+        return res.status(404).json({ message: "Trade not found" });
+      }
+      
+      if (trade.recipientUserId !== user.id) {
+        return res.status(403).json({ message: "Not your trade to decline" });
+      }
+      
+      if (trade.status !== "pending") {
+        return res.status(400).json({ message: "Trade already resolved" });
+      }
+      
+      await storage.updateTradeStatus(trade.id, "declined");
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error declining trade:", error);
+      res.status(500).json({ message: "Failed to decline trade" });
+    }
+  });
+
+  // User search for gifting/trading
+  app.get("/api/users/search", async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const query = req.query.q as string;
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      const results = await storage.searchUsers(query, user.id);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
   return httpServer;
 }
