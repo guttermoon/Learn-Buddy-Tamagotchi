@@ -8,10 +8,8 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  const DEMO_USER_ID = "demo-user-id";
-  
   async function ensureDemoUser() {
-    let user = await storage.getUser(DEMO_USER_ID);
+    let user = await storage.getUserByUsername("demo");
     if (!user) {
       user = await storage.createUser({
         username: "demo",
