@@ -1,6 +1,7 @@
 import { 
   users, creatures, facts, flashcards, quizQuestions, quizSessions, achievements, userAchievements,
   accessories, userAccessories, teams, teamMembers, teamContributions,
+  accessoryGifts, accessoryTrades,
   type User, type InsertUser, type Creature, type InsertCreature, 
   type Fact, type InsertFact, type Flashcard, type InsertFlashcard,
   type QuizQuestion, type InsertQuizQuestion, type QuizSession, type InsertQuizSession,
@@ -8,7 +9,9 @@ import {
   type Accessory, type InsertAccessory, type UserAccessory, type InsertUserAccessory,
   type Team, type InsertTeam, type TeamMember, type InsertTeamMember,
   type TeamContribution, type InsertTeamContribution, type TeamLeaderboardEntry,
-  type LeaderboardEntry
+  type LeaderboardEntry,
+  type AccessoryGift, type InsertAccessoryGift,
+  type AccessoryTrade, type InsertAccessoryTrade
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, lte, sql, and } from "drizzle-orm";
@@ -64,6 +67,25 @@ export interface IStorage {
   addTeamContribution(contribution: InsertTeamContribution): Promise<TeamContribution>;
   getTeamContributions(teamId: string): Promise<TeamLeaderboardEntry[]>;
   getUserTeamContribution(teamId: string, userId: string): Promise<number>;
+  
+  // Gift methods
+  createGift(gift: InsertAccessoryGift): Promise<AccessoryGift>;
+  getGift(id: string): Promise<AccessoryGift | undefined>;
+  getPendingGiftsForUser(userId: string): Promise<(AccessoryGift & { accessory: Accessory; sender: User })[]>;
+  getSentGifts(userId: string): Promise<(AccessoryGift & { accessory: Accessory; recipient: User })[]>;
+  updateGiftStatus(id: string, status: string): Promise<AccessoryGift | undefined>;
+  transferAccessoryOwnership(userAccessoryId: string, newUserId: string): Promise<UserAccessory | undefined>;
+  getUserAccessory(id: string): Promise<(UserAccessory & { accessory: Accessory }) | undefined>;
+  
+  // Trade methods
+  createTrade(trade: InsertAccessoryTrade): Promise<AccessoryTrade>;
+  getTrade(id: string): Promise<AccessoryTrade | undefined>;
+  getPendingTradesForUser(userId: string): Promise<(AccessoryTrade & { proposerAccessory: Accessory; recipientAccessory: Accessory; proposer: User })[]>;
+  getSentTrades(userId: string): Promise<(AccessoryTrade & { proposerAccessory: Accessory; recipientAccessory: Accessory; recipient: User })[]>;
+  updateTradeStatus(id: string, status: string): Promise<AccessoryTrade | undefined>;
+  
+  // User search
+  searchUsers(query: string, excludeUserId: string): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -352,6 +374,172 @@ export class DatabaseStorage implements IStorage {
       .from(teamContributions)
       .where(and(eq(teamContributions.teamId, teamId), eq(teamContributions.userId, userId)));
     return result?.total || 0;
+  }
+
+  // Gift methods
+  async createGift(gift: InsertAccessoryGift): Promise<AccessoryGift> {
+    const [newGift] = await db.insert(accessoryGifts).values(gift).returning();
+    return newGift;
+  }
+
+  async getGift(id: string): Promise<AccessoryGift | undefined> {
+    const [gift] = await db.select().from(accessoryGifts).where(eq(accessoryGifts.id, id));
+    return gift || undefined;
+  }
+
+  async getPendingGiftsForUser(userId: string): Promise<(AccessoryGift & { accessory: Accessory; sender: User })[]> {
+    const result = await db
+      .select()
+      .from(accessoryGifts)
+      .innerJoin(userAccessories, eq(accessoryGifts.userAccessoryId, userAccessories.id))
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+      .innerJoin(users, eq(accessoryGifts.senderUserId, users.id))
+      .where(and(eq(accessoryGifts.recipientUserId, userId), eq(accessoryGifts.status, "pending")));
+    return result.map(r => ({
+      ...r.accessory_gifts,
+      accessory: r.accessories,
+      sender: r.users,
+    }));
+  }
+
+  async getSentGifts(userId: string): Promise<(AccessoryGift & { accessory: Accessory; recipient: User })[]> {
+    const result = await db
+      .select()
+      .from(accessoryGifts)
+      .innerJoin(userAccessories, eq(accessoryGifts.userAccessoryId, userAccessories.id))
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+      .innerJoin(users, eq(accessoryGifts.recipientUserId, users.id))
+      .where(eq(accessoryGifts.senderUserId, userId));
+    return result.map(r => ({
+      ...r.accessory_gifts,
+      accessory: r.accessories,
+      recipient: r.users,
+    }));
+  }
+
+  async updateGiftStatus(id: string, status: string): Promise<AccessoryGift | undefined> {
+    const [gift] = await db.update(accessoryGifts)
+      .set({ status, resolvedAt: new Date() })
+      .where(eq(accessoryGifts.id, id))
+      .returning();
+    return gift || undefined;
+  }
+
+  async transferAccessoryOwnership(userAccessoryId: string, newUserId: string): Promise<UserAccessory | undefined> {
+    const [updated] = await db.update(userAccessories)
+      .set({ userId: newUserId, equipped: false })
+      .where(eq(userAccessories.id, userAccessoryId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getUserAccessory(id: string): Promise<(UserAccessory & { accessory: Accessory }) | undefined> {
+    const [result] = await db
+      .select()
+      .from(userAccessories)
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+      .where(eq(userAccessories.id, id));
+    if (!result) return undefined;
+    return {
+      ...result.user_accessories,
+      accessory: result.accessories,
+    };
+  }
+
+  // Trade methods
+  async createTrade(trade: InsertAccessoryTrade): Promise<AccessoryTrade> {
+    const [newTrade] = await db.insert(accessoryTrades).values(trade).returning();
+    return newTrade;
+  }
+
+  async getTrade(id: string): Promise<AccessoryTrade | undefined> {
+    const [trade] = await db.select().from(accessoryTrades).where(eq(accessoryTrades.id, id));
+    return trade || undefined;
+  }
+
+  async getPendingTradesForUser(userId: string): Promise<(AccessoryTrade & { proposerAccessory: Accessory; recipientAccessory: Accessory; proposer: User })[]> {
+    const proposerAccs = db.$with('proposer_accs').as(
+      db.select({
+        tradeId: accessoryTrades.id,
+        accessoryId: accessories.id,
+        accessoryName: accessories.name,
+        accessoryIcon: accessories.icon,
+        accessoryRarity: accessories.rarity,
+      })
+      .from(accessoryTrades)
+      .innerJoin(userAccessories, eq(accessoryTrades.proposerAccessoryId, userAccessories.id))
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+    );
+
+    const result = await db
+      .select()
+      .from(accessoryTrades)
+      .innerJoin(userAccessories, eq(accessoryTrades.recipientAccessoryId, userAccessories.id))
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+      .innerJoin(users, eq(accessoryTrades.proposerUserId, users.id))
+      .where(and(eq(accessoryTrades.recipientUserId, userId), eq(accessoryTrades.status, "pending")));
+
+    const trades = [];
+    for (const r of result) {
+      const [proposerAcc] = await db
+        .select()
+        .from(userAccessories)
+        .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+        .where(eq(userAccessories.id, r.accessory_trades.proposerAccessoryId));
+      
+      trades.push({
+        ...r.accessory_trades,
+        proposerAccessory: proposerAcc?.accessories || {} as Accessory,
+        recipientAccessory: r.accessories,
+        proposer: r.users,
+      });
+    }
+    return trades;
+  }
+
+  async getSentTrades(userId: string): Promise<(AccessoryTrade & { proposerAccessory: Accessory; recipientAccessory: Accessory; recipient: User })[]> {
+    const result = await db
+      .select()
+      .from(accessoryTrades)
+      .innerJoin(userAccessories, eq(accessoryTrades.proposerAccessoryId, userAccessories.id))
+      .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+      .innerJoin(users, eq(accessoryTrades.recipientUserId, users.id))
+      .where(eq(accessoryTrades.proposerUserId, userId));
+
+    const trades = [];
+    for (const r of result) {
+      const [recipientAcc] = await db
+        .select()
+        .from(userAccessories)
+        .innerJoin(accessories, eq(userAccessories.accessoryId, accessories.id))
+        .where(eq(userAccessories.id, r.accessory_trades.recipientAccessoryId));
+      
+      trades.push({
+        ...r.accessory_trades,
+        proposerAccessory: r.accessories,
+        recipientAccessory: recipientAcc?.accessories || {} as Accessory,
+        recipient: r.users,
+      });
+    }
+    return trades;
+  }
+
+  async updateTradeStatus(id: string, status: string): Promise<AccessoryTrade | undefined> {
+    const [trade] = await db.update(accessoryTrades)
+      .set({ status, resolvedAt: new Date() })
+      .where(eq(accessoryTrades.id, id))
+      .returning();
+    return trade || undefined;
+  }
+
+  // User search
+  async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
+    const result = await db
+      .select()
+      .from(users)
+      .where(sql`${users.username} ILIKE ${`%${query}%`} AND ${users.id} != ${excludeUserId}`)
+      .limit(10);
+    return result;
   }
 }
 
