@@ -1,11 +1,11 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Home, BookOpen, Trophy, User, Users } from "lucide-react";
+import { Home, BookOpen, BarChart3, Trophy, User } from "lucide-react";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: BookOpen, label: "Learn", path: "/learn" },
-  { icon: Users, label: "Team", path: "/team" },
+  { icon: BarChart3, label: "Progress", path: "/progress" },
   { icon: Trophy, label: "Ranks", path: "/leaderboard" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
