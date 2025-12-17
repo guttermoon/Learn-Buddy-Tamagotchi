@@ -158,22 +158,22 @@ export default function Home() {
             <CreatureLoadingSkeleton />
           ) : (
             <>
-              <div className="relative">
-                <CreatureDisplay
+              <CreatureDisplay
                   creature={creature || null}
                   size="lg"
                   showSparkles={Boolean(creature?.happiness && creature.happiness >= 80)}
                   isFeeding={isFeeding}
                   equippedAccessories={equippedAccessories}
                 />
-                {creature && (
-                  <div className="absolute top-0 right-0">
-                    <RenameDialog currentName={creature.name} />
-                  </div>
-                )}
-              </div>
 
-              <div className="mt-12 flex flex-col items-center gap-3">
+              {creature && (
+                <div className="mt-4 flex items-center gap-1">
+                  <span className="font-display text-xl font-bold">{creature.name}</span>
+                  <RenameDialog currentName={creature.name} />
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-col items-center gap-3">
                 <Badge 
                   variant="outline" 
                   className={`${healthStatus.color} border-current`}

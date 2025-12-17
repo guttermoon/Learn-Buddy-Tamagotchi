@@ -163,7 +163,7 @@ export default function Profile() {
           <Button
             variant="outline"
             className="w-full text-muted-foreground"
-            onClick={() => setLocation("/")}
+            onClick={() => window.location.href = "/api/logout"}
             data-testid="button-logout"
           >
             <LogOut className="w-4 h-4 mr-2" />

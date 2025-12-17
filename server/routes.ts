@@ -2,32 +2,44 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema } from "@shared/schema";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  async function ensureDemoUser() {
-    let user = await storage.getUserByUsername("demo");
-    if (!user) {
-      user = await storage.createUser({
-        username: "demo",
-        password: "demo123",
-        displayName: "Learning Champion",
-      });
+  await setupAuth(app);
+  registerAuthRoutes(app);
+  
+  async function getCurrentUser(req: any) {
+    // If authenticated via Replit Auth, use that user
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+      const userId = req.user.claims.sub;
+      let user = await storage.getUser(userId);
       
-      await storage.createCreature({
-        userId: user.id,
-        name: "Buddy",
-      });
+      // User should exist from auth upsert, but ensure creature exists
+      if (user) {
+        let creature = await storage.getCreature(user.id);
+        if (!creature) {
+          await storage.createCreature({
+            userId: user.id,
+            name: "Buddy",
+          });
+        }
+      }
+      return user;
     }
-    return user;
+    return null;
   }
 
   app.get("/api/user", async (req, res) => {
     try {
-      let user = await ensureDemoUser();
+      let user = await getCurrentUser(req);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       // Check for daily login streak
       const today = new Date().toISOString().split('T')[0];
@@ -82,7 +94,10 @@ export async function registerRoutes(
 
   app.get("/api/creature", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       let creature = await storage.getCreature(user.id);
       
       if (!creature) {
@@ -130,7 +145,10 @@ export async function registerRoutes(
 
   app.post("/api/creature/feed", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const creature = await storage.getCreature(user.id);
       
       if (!creature) {
@@ -170,7 +188,10 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Name must be 20 characters or less" });
       }
       
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const creature = await storage.getCreature(user.id);
       
       if (!creature) {
@@ -190,7 +211,10 @@ export async function registerRoutes(
 
   app.get("/api/flashcards", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       let flashcards = await storage.getFlashcardsForUser(user.id);
       
       if (flashcards.length === 0) {
@@ -217,7 +241,10 @@ export async function registerRoutes(
   app.post("/api/flashcards/review", async (req, res) => {
     try {
       const { flashcardId, correct } = req.body;
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       const flashcards = await storage.getFlashcardsForUser(user.id);
       const flashcard = flashcards.find(f => f.id === flashcardId);
@@ -302,7 +329,10 @@ export async function registerRoutes(
   app.post("/api/quiz/submit", async (req, res) => {
     try {
       const { score, totalQuestions } = req.body;
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       const baseXp = score * 10;
       const bonusXp = score === totalQuestions ? 25 : 0;
@@ -397,7 +427,10 @@ export async function registerRoutes(
 
   app.get("/api/achievements", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const allAchievements = await storage.getAchievements();
       const userAchievements = await storage.getUserAchievements(user.id);
       const creature = await storage.getCreature(user.id);
@@ -436,7 +469,10 @@ export async function registerRoutes(
 
   app.post("/api/minigame/complete", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { score } = req.body;
       
       const xpEarned = Math.max(10, Math.min(100, score || 50));
@@ -467,7 +503,10 @@ export async function registerRoutes(
 
   app.get("/api/user/settings", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       res.json({
         notificationTime: user.notificationTime || "09:00",
         showOnLeaderboard: user.showOnLeaderboard ?? true,
@@ -480,7 +519,10 @@ export async function registerRoutes(
 
   app.post("/api/user/settings", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { notificationTime, showOnLeaderboard } = req.body;
       
       const updatedUser = await storage.updateUser(user.id, {
@@ -511,7 +553,10 @@ export async function registerRoutes(
 
   app.get("/api/shop/owned", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const owned = await storage.getUserAccessories(user.id);
       res.json(owned);
     } catch (error) {
@@ -523,7 +568,10 @@ export async function registerRoutes(
   app.post("/api/shop/purchase", async (req, res) => {
     try {
       const { accessoryId } = req.body;
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       const accessory = await storage.getAccessory(accessoryId);
       if (!accessory) {
@@ -556,7 +604,10 @@ export async function registerRoutes(
   app.post("/api/shop/equip", async (req, res) => {
     try {
       const { userAccessoryId, equipped } = req.body;
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       // Get the accessory to find its category
       const owned = await storage.getUserAccessories(user.id);
@@ -580,7 +631,10 @@ export async function registerRoutes(
 
   app.get("/api/shop/equipped", async (req, res) => {
     try {
-      const user = await ensureDemoUser();
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const equipped = await storage.getEquippedAccessories(user.id);
       res.json(equipped);
     } catch (error) {

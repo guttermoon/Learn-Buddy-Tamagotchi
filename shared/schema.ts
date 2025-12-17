@@ -4,24 +4,10 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Users table
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  displayName: text("display_name"),
-  level: integer("level").notNull().default(1),
-  xp: integer("xp").notNull().default(0),
-  coins: integer("coins").notNull().default(50),
-  totalFactsMastered: integer("total_facts_mastered").notNull().default(0),
-  currentStreak: integer("current_streak").notNull().default(0),
-  longestStreak: integer("longest_streak").notNull().default(0),
-  lastActiveDate: text("last_active_date"),
-  dailyFactTime: text("daily_fact_time").default("09:00"),
-  notificationTime: text("notification_time").default("09:00"),
-  showOnLeaderboard: boolean("show_on_leaderboard").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// Import and re-export auth models
+import { users, sessions } from "./models/auth";
+export { users, sessions };
+export type { User, UpsertUser } from "./models/auth";
 
 // Creatures table
 export const creatures = pgTable("creatures", {
@@ -147,7 +133,6 @@ export const flashcardsRelations = relations(flashcards, ({ one }) => ({
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
-  password: true,
   displayName: true,
 });
 
@@ -190,7 +175,6 @@ export const insertUserAccessorySchema = createInsertSchema(userAccessories).pic
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 export type InsertCreature = z.infer<typeof insertCreatureSchema>;
 export type Creature = typeof creatures.$inferSelect;
 export type Fact = typeof facts.$inferSelect;

@@ -143,7 +143,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuizQuestion(insertQuestion: InsertQuizQuestion): Promise<QuizQuestion> {
-    const [question] = await db.insert(quizQuestions).values(insertQuestion).returning();
+    const [question] = await db.insert(quizQuestions).values({
+      ...insertQuestion,
+      options: insertQuestion.options as string[],
+    }).returning();
     return question;
   }
 
@@ -170,7 +173,13 @@ export class DatabaseStorage implements IStorage {
 
     return result.map((entry, index) => ({
       rank: index + 1,
-      ...entry,
+      userId: entry.userId,
+      username: entry.username || "Anonymous",
+      displayName: entry.displayName,
+      level: entry.level,
+      xp: entry.xp,
+      totalFactsMastered: entry.totalFactsMastered,
+      currentStreak: entry.currentStreak,
     }));
   }
 

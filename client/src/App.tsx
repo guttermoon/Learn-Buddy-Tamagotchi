@@ -6,7 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BottomNav } from "@/components/bottom-nav";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
+import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Learn from "@/pages/learn";
 import Quiz from "@/pages/quiz";
@@ -19,7 +22,7 @@ import Achievements from "@/pages/achievements";
 import Shop from "@/pages/shop";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function AuthenticatedRouter() {
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -37,20 +40,43 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-lavender" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <header className="fixed top-0 right-0 z-50 p-4">
+        <ThemeToggle />
+      </header>
+      <main>
+        <AuthenticatedRouter />
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <div className="min-h-screen bg-background pb-20">
-            <header className="fixed top-0 right-0 z-50 p-4">
-              <ThemeToggle />
-            </header>
-            <main>
-              <Router />
-            </main>
-            <BottomNav />
-          </div>
+          <AppContent />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
