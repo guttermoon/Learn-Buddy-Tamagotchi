@@ -1,0 +1,413 @@
+# Product Requirements Document
+## Learn Buddy: Tamagotchi Learning Companion for Retail Sales Associates
+
+**Version:** 1.0  
+**Date:** December 17, 2025  
+**Product Owner:** [Name]  
+**Status:** Draft
+
+---
+
+## Executive Summary
+
+Learn Buddy is a gamified learning platform that combines the nostalgic appeal of Tamagotchi-style virtual pets with evidence-based learning techniques. Designed specifically for retail sales associates, the platform helps users memorize product features, sales techniques, company policies, and customer service best practices through an engaging, creature-care experience.
+
+---
+
+## Product Vision
+
+To transform mandatory retail training from a chore into an emotionally engaging daily habit by leveraging the psychological power of nurturing a virtual companion that grows alongside the user's knowledge mastery.
+
+---
+
+## Target Audience
+
+### Primary Users
+- **Retail Sales Associates** (frontline staff in stores)
+- Age range: 18-45
+- Tech comfort level: Moderate to high
+- Work environment: Fast-paced retail floor with mobile device access
+- Pain points: Dry training materials, information overload, lack of retention, competing priorities
+
+### Secondary Users
+- **Retail Managers & Training Coordinators** (viewing analytics and progress)
+- **HR/L&D Teams** (managing content and SCORM integration)
+
+---
+
+## Core Objectives
+
+### Business Goals
+1. Increase knowledge retention rates by 40% compared to traditional training methods
+2. Achieve 70%+ daily active usage among enrolled retail associates
+3. Reduce time-to-competency for new hires by 30%
+4. Drive completion rates of 85%+ for mandatory training modules
+
+### User Goals
+1. Make learning feel like play, not work
+2. Build consistent daily learning habits (5-10 minutes/day)
+3. Feel emotional connection and responsibility toward creature
+4. Experience visible progress and achievement
+5. Compete and connect with peers in a positive way
+
+---
+
+## Key Features & Requirements
+
+### 1. The Creature (Core Mechanic)
+
+#### 1.1 Creature Design
+- **Aesthetic:** Soft pastel colors (lavender, mint, peach, sky blue, cream), rounded shapes, unisex appeal
+- **Starting Form:** Small, simple creature (egg → baby form) with large expressive eyes
+- **Evolution Stages:** 5 distinct growth stages tied to learning milestones
+  - Stage 1: Baby (0-100 facts learned)
+  - Stage 2: Toddler (101-300 facts)
+  - Stage 3: Teen (301-600 facts)
+  - Stage 4: Adult (601-1000 facts)
+  - Stage 5: Master (1000+ facts, unlock special form)
+- **Personality Traits:** Creature develops traits based on learning patterns (e.g., "Curious," "Consistent," "Quick Learner")
+
+#### 1.2 Creature Needs System
+- **Happiness Meter:** 0-100% (depletes over time without interaction)
+- **Knowledge Hunger:** Creature needs "fact feeding" 2-3x daily
+- **Health Status:** Visual indicators (happy/neutral/sad/neglected)
+- **Consequences of Neglect:**
+  - After 24 hours: Creature becomes sad, growth slows
+  - After 48 hours: User must complete remedial "training video" to restore health
+  - After 72 hours: Creature enters "recovery mode" requiring extended care
+  - Note: Creature never "dies" to avoid negative user experience
+
+#### 1.3 Creature Interactions
+- **Feeding:** Answering quiz questions or completing flashcard sessions
+- **Playing:** Mini-games that reinforce learning
+- **Grooming:** Daily check-in bonus
+- **Customization:** Dress creature with earned accessories
+
+### 2. Learning Mechanics
+
+#### 2.1 Content Types
+- **Product Features:** Specifications, benefits, use cases
+- **Sales Techniques:** Closing strategies, objection handling, upselling
+- **Company Policies:** Return policies, warranty information, procedures
+- **Customer Service:** De-escalation, empathy phrases, problem-solving
+
+#### 2.2 Learning Formats
+
+**Flashcards (Spaced Repetition)**
+- Leitner system implementation for optimal retention
+- Cards presented based on confidence level and time since last review
+- Swipe right (know it) / swipe left (review again)
+- Visual progress indicators showing mastery levels
+
+**Quiz Questions**
+- Multiple choice (4 options)
+- True/False
+- Fill-in-the-blank for key terms
+- Scenario-based questions
+- Immediate feedback with explanations
+- 5-10 questions per session
+
+**Daily Fact Drops**
+- Push notification at user-selected time (customizable)
+- Single fact presented in notification (learn without opening app)
+- Tap to expand for more details and related quiz
+- "Fact of the Day" achievement for consistent reading
+
+**Mini-Games**
+- **Match Master:** Memory matching game with product features
+- **Speed Sort:** Categorize items/concepts quickly (timed)
+- **Scenario Sprint:** Choose correct response in customer situations
+- **Feature Frenzy:** Drag-and-drop features to correct products
+- 2-3 minute gameplay sessions
+- Reward: Extra happiness points for creature
+
+#### 2.3 Training Videos (Remedial Content)
+- Triggered when creature is neglected
+- 3-5 minute microlearning videos
+- Interactive checkpoints within videos
+- Completion required to restore creature health
+- Library accessible anytime for voluntary review
+
+### 3. Progression & Rewards
+
+#### 3.1 Level System
+- User levels separate from creature evolution
+- 50 total levels based on XP earned
+- XP sources:
+  - Completing flashcard sessions (10-50 XP)
+  - Perfect quiz scores (bonus 25 XP)
+  - Daily login streak (5 XP/day)
+  - Mini-game completion (15-30 XP)
+  - Training video completion (20 XP)
+
+#### 3.2 Achievement Badges
+- **Learning Milestones:** First 10, 50, 100, 500, 1000 facts mastered
+- **Consistency:** 7-day, 30-day, 100-day streaks
+- **Mastery:** 100% accuracy in category
+- **Social:** Share progress 5 times, top 10 on leaderboard
+- **Special:** Holiday events, seasonal challenges
+- Display badges on profile and creature habitat
+
+#### 3.3 Accessory Shop
+- Earn virtual currency ("Knowledge Gems") through activities
+- Purchase items for creature:
+  - Hats (beanies, crowns, caps)
+  - Accessories (glasses, scarves, backpacks)
+  - Habitat decorations (plants, furniture, backgrounds)
+  - Special effects (sparkles, auras)
+- Seasonal and limited-edition items
+- Some premium items unlockable only through achievement completion
+
+### 4. Social Features
+
+#### 4.1 Leaderboards
+- **Global Leaderboard:** Top 100 users by XP
+- **Store/Location Leaderboard:** Compare within same retail location
+- **Friends Leaderboard:** Private group competitions
+- **Weekly Challenges:** Rotating competitive events
+- Privacy option to appear anonymously or with username
+
+#### 4.2 Progress Sharing
+- **Snapshot Generator:** Create shareable image with:
+  - Creature's current form and outfit
+  - Key stats (level, streak, facts mastered)
+  - Recent achievements
+  - Customizable background template
+- Share to: SMS, email, social media, or within-app gallery
+- Optional: Tag colleagues to encourage participation
+
+#### 4.3 Team Features (Future Consideration)
+- Store-wide goals and collective rewards
+- Manager visibility into team progress (aggregated)
+- Group challenges and cooperative mini-games
+
+### 5. Notification System
+
+#### 5.1 Push Notifications
+- **Daily Fact Drop:** User-scheduled time with educational content
+- **Creature Check-In:** "Your buddy misses you!" (if 18+ hours inactive)
+- **Streak Reminders:** "Don't break your 12-day streak!"
+- **Achievement Unlocks:** "You earned a new badge!"
+- **Leaderboard Updates:** "You moved up to #5 in your store!"
+- **New Content Alerts:** "5 new product facts available"
+
+#### 5.2 Notification Customization
+- Opt-in/opt-out by notification type
+- Set quiet hours
+- Frequency controls (max 3 notifications/day default)
+
+### 6. Platform Requirements
+
+#### 6.1 Web Application
+- Responsive design (desktop and mobile web)
+- Progressive Web App (PWA) capabilities
+- Offline mode for flashcard review
+- Modern browsers: Chrome, Safari, Firefox, Edge
+
+#### 6.2 Mobile Applications
+- **iOS:** iOS 14+ (Swift/React Native)
+- **Android:** Android 8+ (Kotlin/React Native)
+- Native push notifications
+- Background sync for offline learning
+- App Store and Google Play distribution
+
+#### 6.3 SCORM Integration (LMS)
+- **SCORM 1.2 and 2004 compliance**
+- Export packages for major LMS platforms:
+  - Cornerstone OnDemand
+  - SAP SuccessFactors
+  - Workday Learning
+  - Moodle
+  - Canvas
+- Track completion, scores, and time spent
+- Single Sign-On (SSO) support
+- xAPI/Tin Can API support for advanced analytics
+
+---
+
+## User Experience & Design
+
+### Visual Design Principles
+- **Soft Pastel Palette:** Primary colors in muted tones (no harsh neons)
+- **Rounded Corners:** All UI elements use minimum 8px border radius
+- **Generous White Space:** Uncluttered, calm interface
+- **Smooth Animations:** 60fps transitions and micro-interactions
+- **Unisex Appeal:** Avoid stereotypically gendered colors/elements
+- **Accessibility:** WCAG 2.1 AA compliance minimum
+
+### Kawaii Design Elements
+- Subtle sparkle effects on interactions
+- Bouncy, playful animations (creature reactions)
+- Friendly, hand-drawn style illustrations
+- Encouraging messaging ("You're doing great!")
+- Positive reinforcement over negative consequences
+- Emotional expressiveness in creature design
+
+### UI Components
+- **Home Screen:** Creature habitat (center), quick stats (top), action buttons (bottom)
+- **Learning Hub:** Tab navigation for flashcards, quizzes, games, videos
+- **Progress Dashboard:** Visual graphs, milestone tracker, achievement gallery
+- **Profile:** Avatar, stats, leaderboard position, settings
+- **Shop:** Grid layout of accessories with preview functionality
+
+---
+
+## Technical Requirements
+
+### Performance
+- App load time: <2 seconds on 4G connection
+- Animation frame rate: 60fps minimum
+- Offline capability: Core learning functions work without internet
+- Sync latency: <500ms for progress updates when online
+
+### Data & Privacy
+- GDPR and CCPA compliant
+- Anonymized analytics
+- Opt-in for sharing personal data
+- Secure storage of learning progress
+- No selling of user data to third parties
+
+### Integration Points
+- **LMS:** SCORM/xAPI for enterprise learning systems
+- **CRM:** Export completion data for HR systems
+- **Analytics:** Google Analytics, Mixpanel for product insights
+- **Authentication:** OAuth 2.0, SAML for enterprise SSO
+
+### Content Management
+- **Admin Portal:** For managers to:
+  - Upload new facts and questions
+  - Create custom learning paths
+  - Monitor team analytics
+  - Manage user accounts
+- **Content API:** Programmatic content updates
+- **Version Control:** Track content changes and A/B test effectiveness
+
+---
+
+## Success Metrics (KPIs)
+
+### Engagement Metrics
+- Daily Active Users (DAU): Target 70%+
+- Weekly Active Users (WAU): Target 85%+
+- Average session length: 8-12 minutes
+- Sessions per day: 2.5+ average
+- 30-day retention rate: 60%+
+
+### Learning Metrics
+- Quiz accuracy improvement over time: +25% after 30 days
+- Fact retention rate: 75%+ at 30-day mark (spaced repetition test)
+- Training completion rate: 85%+
+- Time to complete onboarding: <14 days (vs 21-day baseline)
+
+### Business Impact
+- Knowledge assessment scores: +40% vs control group
+- Customer satisfaction scores: +10% for users vs non-users
+- Sales performance: Track correlation with product knowledge
+- Training cost per employee: -30% vs traditional methods
+
+---
+
+## Release Strategy
+
+### Phase 1: MVP (Months 1-3)
+- Single creature with 3 evolution stages
+- Flashcards and basic quizzes
+- Daily fact notifications
+- Simple happiness/health system
+- Web app only
+- Basic leaderboard
+- 500 pre-loaded retail facts
+
+### Phase 2: Enhanced Experience (Months 4-6)
+- Full 5-stage evolution
+- Mini-games (2 games)
+- Accessory shop (20 items)
+- Achievement system
+- Mobile apps (iOS & Android)
+- Progress sharing
+- Advanced analytics dashboard
+
+### Phase 3: Enterprise Integration (Months 7-9)
+- SCORM/xAPI compliance
+- Admin content management portal
+- SSO integration
+- Custom content API
+- Team features
+- Manager analytics
+
+### Phase 4: Scale & Optimize (Months 10-12)
+- Additional mini-games
+- Seasonal events
+- AI-powered personalized learning paths
+- Voice-enabled facts (smart speaker integration)
+- Expanded accessory catalog
+- Multi-language support
+
+---
+
+## Risk & Mitigation
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Low adoption rate | High | Medium | Pre-launch pilot with early adopters; gather feedback |
+| Gamification fatigue | Medium | Medium | Vary content types; introduce fresh mechanics quarterly |
+| Technical issues on mobile | High | Low | Extensive QA; phased rollout by region |
+| Content becomes stale | High | Medium | Monthly content updates; user-generated content in Phase 4 |
+| Privacy concerns | High | Low | Transparent policies; minimal data collection; security audits |
+| SCORM complexity delays launch | Medium | Medium | Partner with LMS integration specialist; start simple |
+
+---
+
+## Dependencies
+
+### Internal
+- Content team to create initial 500+ facts
+- Design team for creature evolution artwork
+- Development team availability
+- L&D stakeholder approval on learning methodology
+
+### External
+- SCORM compliance certification
+- App store approval (Apple, Google)
+- Third-party animation library licensing
+- Cloud infrastructure setup (AWS/Azure/GCP)
+- Push notification service (OneSignal, Firebase)
+
+---
+
+## Open Questions
+
+1. Should managers have "admin creatures" that reflect team performance?
+2. Do we allow users to name their creature?
+3. Should there be a "creature sanctuary" to view retired/previous evolution stages?
+4. How do we handle users who switch stores or get promoted?
+5. Should we incorporate AR features for mobile (creature in real world)?
+6. What's our monetization strategy? (B2B licensing? Freemium model?)
+
+---
+
+## Appendix
+
+### A. Competitive Analysis
+- Duolingo: Streak mechanics, push notifications, gamification
+- Habitica: Task-based creature care, RPG elements
+- Pokémon GO: Collection mechanics, social features
+- Quizlet: Flashcard learning, spaced repetition
+
+### B. User Research Needed
+- Interview 20+ retail associates about learning preferences
+- Survey on current training pain points
+- Usability testing on prototype
+- A/B test notification timing and content
+
+### C. Design Mockup Requirements
+- Creature evolution concept art (all 5 stages)
+- UI wireframes for all core screens
+- Accessory catalog designs (initial 20 items)
+- Animation storyboards for key interactions
+
+---
+
+**Document Owner:** [Name]  
+**Last Updated:** December 17, 2025  
+**Next Review:** January 2026
